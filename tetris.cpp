@@ -12,6 +12,7 @@ using namespace std;
 string ANSI_CODES[] {
 	"\033[m",
 	"\033[100m",
+	"\033[48;5;234m",
 	"\033[43m",
 	"\033[46m",
 	"\033[48;5;166m", //ORANGE
@@ -45,6 +46,7 @@ enum BoardInfo {
 enum AnsiCodeIndexes {
 	DEFAULT,
 	GRAY,
+	DARK_GRAY,
 	YELLOW,
 	CYAN,
 	ORANGE,
@@ -82,8 +84,10 @@ struct Block {
 
 const string SQUARE = "  ";
 
-void drawBoard(const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], int nextBlock, int heldBlock, int score) {
-	cout << ANSI_CODES[RESET_CURSOR];
+void drawBoard(const Block &fallingBlock, const Block &predictedBlock, const Board gameboard[HEIGHT][WIDTH], int nextBlock, int heldBlock, int score) {
+	cout << ANSI_CODES[RESET_CURSOR] << ANSI_CODES[GRAY];
+	for (int i = 0; i < 12; i++) cout << SQUARE;
+	cout << '\n';
 	for (int i = 0; i < HEIGHT; i++) {
 		cout << ANSI_CODES[GRAY] << SQUARE << ANSI_CODES[DEFAULT];
 		for (int j = 0; j < WIDTH; j++) {
@@ -95,12 +99,23 @@ void drawBoard(const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], 
 					break;
 				}
 			}
-			if (hasPrinted || i == -1) continue;
+			for (auto position : predictedBlock.positions) {
+				if (position.x == j && position.y == i && !hasPrinted) {
+					cout << ANSI_CODES[DARK_GRAY] <<  SQUARE << ANSI_CODES[DEFAULT];
+					hasPrinted = true;
+					break;
+					ANSI_CODES[predictedBlock.color];
+				}
+			}
+			if (hasPrinted) continue;
 			int color = (gameboard[i][j].state == 0) ? DEFAULT : gameboard[i][j].color;
 			cout << ANSI_CODES[color] << SQUARE;
 		}
-		cout << ANSI_CODES[GRAY] << SQUARE << '\n';
+		cout << ANSI_CODES[GRAY] << SQUARE << ANSI_CODES[DEFAULT] << '\n';
 	}
+	cout << ANSI_CODES[GRAY];
+	for (int i = 0; i < 12; i++) cout << SQUARE;
+	cout << ANSI_CODES[DEFAULT] << '\n';
 }
 
 void initializeBoard(Board gameboard[HEIGHT][WIDTH]) {
@@ -129,45 +144,41 @@ bool moveTetromino(Block &fallingBlock, int delta_x, int delta_y, Board gameboar
 	return true;
 }
 
-void rotateTetromino(Block& fallingBlock) {
+void rotateTetromino(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
+	Position newPositions[4];
 
-}
+	Position reference = fallingBlock.positions[0];
 
-void playerInputs(Block &fallingBlock, Board gameboard[HEIGHT][WIDTH], int &fallingDelay) {
-	int keyHit = 0;
-	if (_kbhit()) {
-		keyHit = _getch();
-		switch (keyHit) {
-			case ARROW_UP:
-				rotateTetromino(fallingBlock);
-				break;
-			case ARROW_LEFT:
-				moveTetromino(fallingBlock, -1, 0, gameboard);
-				break;
-			case ARROW_DOWN:
-				fallingDelay = 10;
-				break;
-			case ARROW_RIGHT:
-				moveTetromino(fallingBlock, 1, 0, gameboard);
-				break;
-			case SPACEBAR:
-				break;
-		}
+	for (int i = 0; i < 4; i++) {
+		newPositions[i].x = reference.x - (fallingBlock.positions[i].y - reference.y);
+		newPositions[i].y = reference.y + (fallingBlock.positions[i].x - reference.x);
+	}
+
+	//Kolla om giltig rotation
+
+	for (int i = 0; i < 4; i++) {
+		fallingBlock.positions[i] = newPositions[i];
 	}
 }
 
-void fillBag(vector<char> &bag) {
+
+void placeTetromino(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
+	for (int i = 0; i < 4; i++)
+		gameboard[fallingBlock.positions[i].y][fallingBlock.positions[i].x] = { 1, fallingBlock.color };
+}
+
+void fillBag(vector<int>& bag) {
 	while (bag.size() != 7) {
 		int randomShape = rand() % 7;
 		bool alreadyInBag = false;
-		for (auto shape : bag) 
+		for (auto shape : bag)
 			if (randomShape == shape) alreadyInBag = true;
 
 		if (!alreadyInBag) bag.push_back(randomShape);
 	}
 }
 
-bool spawnFallingBlock(Block &fallingBlock, vector<char> &bag, const Board gameboard[HEIGHT][WIDTH]) {
+bool spawnNewBlock(Block& fallingBlock, vector<int>& bag, const Board gameboard[HEIGHT][WIDTH]) {
 	char nextShape = bag[bag.size() - 1];
 	bag.pop_back();
 	switch (nextShape) {
@@ -227,9 +238,28 @@ bool spawnFallingBlock(Block &fallingBlock, vector<char> &bag, const Board gameb
 	return isCollision(fallingBlock, gameboard);
 }
 
-void placeTetromino(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
-	for (int i = 0; i < 4; i++)
-		gameboard[fallingBlock.positions[i].y][fallingBlock.positions[i].x] = { 1, fallingBlock.color };
+void playerInputs(Block &fallingBlock, Board gameboard[HEIGHT][WIDTH], int &fallingDelay, vector<int> &bag, bool &gameover) {
+	if (_kbhit()) {
+		switch (_getch()) {
+			case ARROW_UP:
+				rotateTetromino(fallingBlock, gameboard);
+				break;
+			case ARROW_LEFT:
+				moveTetromino(fallingBlock, -1, 0, gameboard);
+				break;
+			case ARROW_DOWN:
+				fallingDelay = 10;
+				break;
+			case ARROW_RIGHT:
+				moveTetromino(fallingBlock, 1, 0, gameboard);
+				break;
+			case SPACEBAR:
+				while (moveTetromino(fallingBlock, 0, 1, gameboard));
+				placeTetromino(fallingBlock, gameboard);
+				gameover = spawnNewBlock(fallingBlock, bag, gameboard);
+				break;
+		}
+	}
 }
 
 void clearLines(Board gameboard[HEIGHT][WIDTH]) {
@@ -250,17 +280,22 @@ void clearLines(Board gameboard[HEIGHT][WIDTH]) {
 
 }
 
+Block predictBlock(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
+	while (moveTetromino(fallingBlock, 0, 1, gameboard));
+	return fallingBlock;
+}
+
 void tetris() {
 	system("cls");
 	cout << ANSI_CODES[HIDE_CURSOR];
 	Board gameboard[HEIGHT][WIDTH];
 	initializeBoard(gameboard);
 	
-	Block fallingBlock;
+	Block fallingBlock, predictedBlock;
 	
-	vector<char> bag;
+	vector<int> bag;
 	fillBag(bag);
-	spawnFallingBlock(fallingBlock, bag, gameboard);
+	spawnNewBlock(fallingBlock, bag, gameboard);
 
 	bool gameover = false;
 	int fallingDelay = 500;
@@ -271,19 +306,20 @@ void tetris() {
 	while (!gameover) {
 		fallingDelay = fallingDelays[level];
 
-		playerInputs(fallingBlock, gameboard, fallingDelay);
+		playerInputs(fallingBlock, gameboard, fallingDelay, bag, gameover);
+
+		predictedBlock = predictBlock(fallingBlock, gameboard);
 
 		if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
 			if (!moveTetromino(fallingBlock, 0, 1, gameboard)) {
 				placeTetromino(fallingBlock, gameboard);
-				spawnFallingBlock(fallingBlock, bag, gameboard);
+				gameover = spawnNewBlock(fallingBlock, bag, gameboard);
 			}
 			lastTime = chrono::steady_clock::now();
 		}
 
 		clearLines(gameboard);
-
-		drawBoard(fallingBlock, gameboard, bag[bag.size() - 1], heldBlock, score);
+		drawBoard(fallingBlock, predictedBlock, gameboard, bag[bag.size() - 1], heldBlock, score);
 		
 		
 	}
