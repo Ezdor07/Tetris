@@ -209,6 +209,7 @@ bool moveTetromino(Block& fallingBlock, int delta_x, int delta_y, Board gameboar
 }
 
 void rotateTetromino(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
+	if (fallingBlock.color == YELLOW) return;
 	Block newBlock;
 
 	Position reference = fallingBlock.positions[0];
@@ -320,6 +321,13 @@ Block predictBlock(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
 	return fallingBlock;
 }
 
+void pause() {
+	cout << "\033[10;22H" << "PAUSED";
+	cout << "\033[11;18HPRESS P TO PLAY";
+	while (_getch() != 'p');
+	system("cls");
+}
+
 void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, chrono::steady_clock::time_point& lastTime) {
 	int key = 0;
 	if (_kbhit()) {
@@ -352,6 +360,8 @@ void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fall
 				hasHeldBlock = true;
 			}
 			break;
+		case 'p':
+			pause();
 		}
 	}
 }
@@ -441,10 +451,7 @@ void tetris(int level) {
 		predictedBlock = predictBlock(fallingBlock, gameboard);
 		drawBoard(fallingBlock, predictedBlock, gameboard, bag[bag.size() - 1], heldBlock, score, level);
 		clearLines(gameboard, score, level, linesCleared);
-		//Sleep(10);
 	}
-	cout << "GAMEOVER";
-	Sleep(5000);
 }
 
 bool menu(int& startingLevel) {
