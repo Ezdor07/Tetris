@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -83,6 +85,29 @@ struct Block {
 };
 
 const string SQUARE = "  ";
+
+void readLeaderboard() {
+	ifstream leaderboard("Leaderboard.txt");
+	if (!leaderboard) {
+		cout << "Lyckades inte läsa filen";
+		return;
+	}
+	string line;
+	int ranking = 1;
+	while (getline(leaderboard, line)) {
+		cout << ranking++ << ". " << line << '\n';
+	}
+	leaderboard.close();
+}
+
+void writeHighscore(int score) {
+	ofstream leaderboard("Leaderboard.txt");
+
+	if (!leaderboard) {
+		cout << "Lyckades inte skriva till filen";
+		return;
+	}
+}
 
 void drawTetromino(int block, int row) {
 	string output[2];
@@ -452,12 +477,15 @@ void tetris(int level) {
 		drawBoard(fallingBlock, predictedBlock, gameboard, bag[bag.size() - 1], heldBlock, score, level);
 		clearLines(gameboard, score, level, linesCleared);
 	}
+	//writeHighscore();
 }
 
 bool menu(int& startingLevel) {
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[SHOW_CURSOR];
 	system("cls");
-	cout << "Choose starting level(0-19): ";
+	cout << "LEADERBOARD\n";
+	readLeaderboard();
+	cout << "\nChoose starting level(0-19): ";
 	do cin >> startingLevel; while (!(startingLevel >= 0 && startingLevel <= 19));
 
 	cout << "Press q/Q to quit or any other button to start";
