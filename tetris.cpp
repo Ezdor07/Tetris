@@ -346,14 +346,35 @@ Block predictBlock(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
 	return fallingBlock;
 }
 
-void pause() {
+void saveGame(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, vector<int> bag) {
+
+}
+
+void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int level, vector<int> bag) {
 	cout << "\033[10;22H" << "PAUSED";
-	cout << "\033[11;18HPRESS P TO PLAY";
-	while (_getch() != 'p');
+	cout << "\033[11;18HCONTINUE[1]\nSAVE GAME[2]\nQUIT[3]";
+	bool redo;
+	do {
+		redo = false;
+		switch (_getch()) {
+		case '1':
+			return;
+		case '2':
+			saveGame(fallingBlock, gameboard, score, bag);
+			redo = true;
+			break;
+		case '3':
+			quit = true;
+			return;
+		default:
+			redo = true;
+			break;
+		}
+	} while (redo);
 	system("cls");
 }
 
-void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, chrono::steady_clock::time_point& lastTime) {
+void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, int level, chrono::steady_clock::time_point& lastTime, bool& quit) {
 	int key = 0;
 	if (_kbhit()) {
 		key = _getch();
@@ -386,7 +407,7 @@ void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fall
 			}
 			break;
 		case 'p':
-			pause();
+			pauseMenu(quit, fallingBlock, gameboard, score, level, bag);
 		}
 	}
 }
@@ -454,16 +475,16 @@ void tetris(int level) {
 	fillBag(bag);
 	spawnNewBlock(fallingBlock, bag, gameboard);
 
-	bool gameover = false;
+	bool gameover = false, quit = false;
 	int fallingDelay = 500;
 	int heldBlock = -1;
 	int score = 0, linesCleared = 0;
 	auto lastTime = chrono::steady_clock::now();
 	bool hasHeldBlock = false;
 
-	while (!gameover) {
+	while (!gameover && !quit) {
 		fallingDelay = (level > 19) ? fallingDelays[19] : fallingDelays[level];
-		playerInputs(fallingBlock, gameboard, fallingDelay, bag, heldBlock, hasHeldBlock, gameover, score, lastTime);
+		playerInputs(fallingBlock, gameboard, fallingDelay, bag, heldBlock, hasHeldBlock, gameover, score, level, lastTime, quit);
 
 		if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
 			if (!moveTetromino(fallingBlock, 0, 1, gameboard))
@@ -477,6 +498,10 @@ void tetris(int level) {
 		drawBoard(fallingBlock, predictedBlock, gameboard, bag[bag.size() - 1], heldBlock, score, level);
 		clearLines(gameboard, score, level, linesCleared);
 	}
+	if (quit) return;
+
+	cout << "GAMEOVER";
+	Sleep(3000);
 	//writeHighscore();
 }
 
