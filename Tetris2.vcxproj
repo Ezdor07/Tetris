@@ -130,7 +130,14 @@
     <ClCompile Include="tetris.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Leaderboard.txt" />
+    <Text Include="bag.txt" />
+    <Text Include="gameboard color.txt" />
+    <Text Include="gameboard state.txt" />
+    <Text Include="held block.txt" />
+    <Text Include="leaderboard.txt" />
+    <Text Include="level.txt" />
+    <Text Include="lines cleared.txt" />
+    <Text Include="score.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

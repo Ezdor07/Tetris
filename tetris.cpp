@@ -84,29 +84,59 @@ struct Block {
 	int color;
 };
 
+struct GameStatistics {
+
+};
+
 const string SQUARE = "  ";
 
-void readLeaderboard() {
-	ifstream leaderboard("Leaderboard.txt");
+void readLeaderboard(vector <int>& scores) {
+	ifstream leaderboard("leaderboard.txt");
 	if (!leaderboard) {
-		cout << "Lyckades inte läsa filen";
+		cout << "Could not read the file";
 		return;
 	}
-	string line;
-	int ranking = 1;
-	while (getline(leaderboard, line)) {
-		cout << ranking++ << ". " << line << '\n';
+	string scoreStr;
+	while (getline(leaderboard, scoreStr)) {
+		scores.push_back(stoi(scoreStr));
 	}
 	leaderboard.close();
+	for (int i = 0; i < scores.size(); i++) {
+		cout << i + 1 << ". " << scores[i] << '\n';
+	}
 }
 
-void writeHighscore(int score) {
-	ofstream leaderboard("Leaderboard.txt");
+void writeHighscore(int gameScore, vector<int> scores) {
+	if (gameScore < scores[scores.size() - 1]) {
+		cout << "You did not make the leaderboard";
+		return;
+	} else cout << "You made the leaderboard\n";
+	
+	ofstream leaderboard("leaderboard.txt");
+
 
 	if (!leaderboard) {
 		cout << "Lyckades inte skriva till filen";
 		return;
 	}
+	vector <int> newLeaderboard;
+	bool hasEntered = false;
+	for (int i = 0; i < scores.size(); i++) {
+		if (gameScore > scores[i] && !hasEntered) {
+			newLeaderboard.push_back(gameScore);
+			hasEntered = true;
+			i--;
+		}
+		else {
+			newLeaderboard.push_back(scores[i]);
+		}
+	}
+
+	for (int score : newLeaderboard) {
+		leaderboard << score << endl;
+	}
+
+	leaderboard.close();
 }
 
 void drawTetromino(int block, int row) {
@@ -346,21 +376,58 @@ Block predictBlock(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
 	return fallingBlock;
 }
 
-void saveGame(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, vector<int> bag) {
+void saveGame(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int linesCleared, vector<int> bag, int level, int heldBlock) {
+	bag.push_back(fallingBlock.color);
 
+	ofstream savedBag("bag.txt");
+	for (auto shape : bag) savedBag << shape;
+	savedBag.close();
+
+	ofstream savedLevel("level.txt");
+	savedLevel << level;
+	savedLevel.close();
+
+	ofstream savedScore("score.txt");
+	savedScore << score;
+	savedScore.close();
+
+	ofstream savedHeldBlock("held block.txt");
+	savedHeldBlock << heldBlock;
+	savedHeldBlock.close();
+
+	ofstream savedLinesCleared("lines cleared.txt");
+	savedLinesCleared << linesCleared;
+	savedLinesCleared.close();
+
+	ofstream savedGameboardState("gameboard state.txt");
+	ofstream savedGameboardColor("gameboard color.txt");
+	for (int i = 0; i < HEIGHT; i++) {
+		for (int j = 0; j < WIDTH; j++) {
+			savedGameboardState << gameboard[i][j].state;
+			savedGameboardColor << gameboard[i][j].color;
+		}
+		savedGameboardState << endl;
+		savedGameboardColor << endl;
+	}
+	savedGameboardState.close();
+	savedGameboardColor.close();
+	system("cls");
+	cout << "SAVED";
+	Sleep(1000);
 }
 
-void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int level, vector<int> bag) {
-	cout << "\033[10;22H" << "PAUSED";
-	cout << "\033[11;18HCONTINUE[1]\nSAVE GAME[2]\nQUIT[3]";
+void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int linesCleared, int level, vector<int> bag, int heldBlock) {
 	bool redo;
 	do {
+		system("cls");
+		cout << "\033[10;22H" << "PAUSED";
+		cout << "\033[11;19HCONTINUE[1]\033[12;19HSAVE GAME[2]\033[13;19HQUIT[3]";
 		redo = false;
 		switch (_getch()) {
 		case '1':
 			return;
 		case '2':
-			saveGame(fallingBlock, gameboard, score, bag);
+			saveGame(fallingBlock, gameboard, score, linesCleared, bag, level, heldBlock);
 			redo = true;
 			break;
 		case '3':
@@ -374,7 +441,7 @@ void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIG
 	system("cls");
 }
 
-void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, int level, chrono::steady_clock::time_point& lastTime, bool& quit) {
+void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, int linesCleared, int level, chrono::steady_clock::time_point& lastTime, bool& quit) {
 	int key = 0;
 	if (_kbhit()) {
 		key = _getch();
@@ -407,7 +474,7 @@ void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fall
 			}
 			break;
 		case 'p':
-			pauseMenu(quit, fallingBlock, gameboard, score, level, bag);
+			pauseMenu(quit, fallingBlock, gameboard, score, linesCleared, level, bag, heldBlock);
 		}
 	}
 }
@@ -463,28 +530,29 @@ void clearLines(Board gameboard[HEIGHT][WIDTH], int& score, int& level, int& lin
 	if (linesCleared > (level + 1) * 10) level++;
 }
 
-void tetris(int level) {
+void tetris(Board gameboard[HEIGHT][WIDTH], int &score, int linesCleared, vector <int> bag, int level, int heldBlock, bool gameLoaded, bool& gameover) {
 	system("cls");
 	cout << ANSI_CODES[HIDE_CURSOR];
-	Board gameboard[HEIGHT][WIDTH];
-	initializeBoard(gameboard);
+	if (!gameLoaded) {
+		initializeBoard(gameboard);
+		fillBag(bag);
+		heldBlock = -1;
+		score = 0;
+		linesCleared = 0;
+	}
 
 	Block fallingBlock, predictedBlock;
-
-	vector<int> bag;
-	fillBag(bag);
 	spawnNewBlock(fallingBlock, bag, gameboard);
 
-	bool gameover = false, quit = false;
-	int fallingDelay = 500;
-	int heldBlock = -1;
-	int score = 0, linesCleared = 0;
+	gameover = false;
+	bool quit = false;
+	int fallingDelay;
 	auto lastTime = chrono::steady_clock::now();
 	bool hasHeldBlock = false;
 
 	while (!gameover && !quit) {
 		fallingDelay = (level > 19) ? fallingDelays[19] : fallingDelays[level];
-		playerInputs(fallingBlock, gameboard, fallingDelay, bag, heldBlock, hasHeldBlock, gameover, score, level, lastTime, quit);
+		playerInputs(fallingBlock, gameboard, fallingDelay, bag, heldBlock, hasHeldBlock, gameover, score, linesCleared, level, lastTime, quit);
 
 		if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
 			if (!moveTetromino(fallingBlock, 0, 1, gameboard))
@@ -502,34 +570,95 @@ void tetris(int level) {
 
 	cout << "GAMEOVER";
 	Sleep(3000);
-	//writeHighscore();
 }
 
-bool menu(int& startingLevel) {
+void loadGame(Board gameboard[HEIGHT][WIDTH], int &score, vector<int> &bag, int &level, int& heldBlock, int &linesCleared) {
+	ifstream gameboardState("gameboard state.txt");
+	ifstream gameboardColor("gameboard color.txt");
+	int rowIndex = 0;
+	string row;
+	while (getline(gameboardState, row)) {
+		int columnIndex = 0;
+		for (char number : row) gameboard[rowIndex][columnIndex++].state = number - '0';
+		rowIndex++;
+	}
+
+	rowIndex = 0;
+	while (getline(gameboardColor, row)) {
+		int columnIndex = 0;
+		for (char number : row) gameboard[rowIndex][columnIndex++].color = number - '0';
+		rowIndex++;
+	}
+	gameboardState.close();
+	gameboardColor.close();
+
+	ifstream savedScore("score.txt");
+	savedScore >> score;
+	savedScore.close();
+
+	ifstream savedLevel("level.txt");
+	savedLevel >> level;
+	savedLevel.close();
+
+	ifstream savedHeldBlock("held block.txt");
+	savedHeldBlock >> heldBlock;
+	savedScore.close();
+
+	ifstream savedLinesCleared("lines cleared.txt");
+	savedLinesCleared >> linesCleared;
+	savedLinesCleared.close();
+
+	ifstream savedBag("bag.txt");
+	string numbers;
+	getline(savedBag, numbers);
+	for (char number : numbers) {
+		bag.push_back(number - '0');
+	}
+}
+
+bool startMenu(Board startingGameboard[HEIGHT][WIDTH], int& startingScore, vector<int>& startingBag, int& startingLevel, int& startingHeldBlock, int& startingLinesCleared, bool& gameLoaded, vector<int>& leaderboard) {
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[SHOW_CURSOR];
 	system("cls");
 	cout << "LEADERBOARD\n";
-	readLeaderboard();
-	cout << "\nChoose starting level(0-19): ";
-	do cin >> startingLevel; while (!(startingLevel >= 0 && startingLevel <= 19));
-
-	cout << "Press q/Q to quit or any other button to start";
-	switch (_getch()) {
-	case 'q':
-	case 'Q':
-		return false;
-	default:
-		return true;
-	}
+	readLeaderboard(leaderboard);
+	cout << "[1]Start New Game\n[2]Load Game\n[3]QUIT";
+	bool redo;
+	do {
+		redo = false;
+		switch (_getch()) {
+		case '1':
+			cout << "\nChoose starting level(0-19): ";
+			do cin >> startingLevel; while (!(startingLevel >= 0 && startingLevel <= 19));
+			gameLoaded = false;
+			return true;
+		case '2':
+			loadGame(startingGameboard, startingScore, startingBag, startingLevel, startingHeldBlock, startingLinesCleared);
+			gameLoaded = true;
+			return true;
+		case '3':
+			return false;
+		default:
+			redo = true;
+			break;
+		}
+	} while (redo);
+	return false;
 }
 
 int main() {
 	srand(time(0));
-	int startingLevel;
-	bool run = menu(startingLevel);
+	bool run = true;
 	while (run) {
-		tetris(startingLevel);
-		run = menu(startingLevel);
+		int startingLevel, score, startingHeldBlock, startingLinesCleared;
+		vector <int> startingBag;
+		vector <int> leaderboard;
+		Board startingGameboard[HEIGHT][WIDTH];
+		bool gameLoaded, gameover;
+		
+		run = startMenu(startingGameboard, score, startingBag, startingLevel, startingHeldBlock, startingLinesCleared, gameLoaded, leaderboard);
+		
+		if(run) tetris(startingGameboard, score, startingLinesCleared, startingBag, startingLevel, startingHeldBlock, gameLoaded, gameover);
+		if(gameover) writeHighscore(score, leaderboard);
 	}
 	return 0;
 }

@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Leaderboard">
+      <UniqueIdentifier>{e9b28a8d-bb86-41c4-aff7-7ae7966c7dff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Saved Game">
+      <UniqueIdentifier>{b178dc40-84a3-4fa7-afeb-705ed877628c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tetris.cpp">
@@ -20,8 +26,29 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Leaderboard.txt">
-      <Filter>Resource Files</Filter>
+    <Text Include="leaderboard.txt">
+      <Filter>Resource Files\Leaderboard</Filter>
+    </Text>
+    <Text Include="score.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="gameboard state.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="level.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="bag.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="gameboard color.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="held block.txt">
+      <Filter>Resource Files\Saved Game</Filter>
+    </Text>
+    <Text Include="lines cleared.txt">
+      <Filter>Resource Files\Saved Game</Filter>
     </Text>
   </ItemGroup>
 </Project>
