@@ -85,7 +85,13 @@ struct Block {
 };
 
 struct GameStatistics {
-
+	Block fallingBlock;
+	Board gameboard[HEIGHT][WIDTH];
+	vector <int> bag;
+	int score;
+	int level;
+	int linesCleared;
+	int heldBlock;
 };
 
 const string SQUARE = "  ";
@@ -131,7 +137,7 @@ void writeHighscore(int gameScore, vector<int> scores) {
 			newLeaderboard.push_back(scores[i]);
 		}
 	}
-
+	if (newLeaderboard.size() > 10) newLeaderboard.pop_back();
 	for (int score : newLeaderboard) {
 		leaderboard << score << endl;
 	}
@@ -178,12 +184,12 @@ void drawTetromino(int block, int row) {
 	cout << output[row] << ANSI_CODES[DEFAULT];
 }
 
-void drawBoard(const Block& fallingBlock, const Block& predictedBlock, const Board gameboard[HEIGHT][WIDTH], int nextBlock, int heldBlock, int score, int level) {
+void drawBoard(const GameStatistics& game, const Block& predictedBlock, int nextBlock) {
 	//Återställer marköre och färg
 	cout << ANSI_CODES[RESET_CURSOR] << ANSI_CODES[DEFAULT];
 	//Skriver ut leveln
 	for (int i = 0; i < 10; i++) cout << SQUARE;
-	cout << "LEVEL: " << level << '\n';
+	cout << "LEVEL: " << game.level << '\n';
 	//Skiver ut övre ramen
 	for (int i = 0; i < 6; i++) cout << SQUARE;
 	cout << ANSI_CODES[GRAY];
@@ -194,17 +200,17 @@ void drawBoard(const Block& fallingBlock, const Block& predictedBlock, const Boa
 
 		cout << ANSI_CODES[DEFAULT] << SQUARE;
 		if (i == 0) cout << "  HOLD  ";
-		else if (i == 2) drawTetromino(heldBlock, 0);
-		else if (i == 3) drawTetromino(heldBlock, 1);
+		else if (i == 2) drawTetromino(game.heldBlock, 0);
+		else if (i == 3) drawTetromino(game.heldBlock, 1);
 		else drawTetromino(-1, 0);
 		cout << ANSI_CODES[DEFAULT] << SQUARE;
 
 		cout << ANSI_CODES[GRAY] << SQUARE << ANSI_CODES[DEFAULT];
 		for (int j = 0; j < WIDTH; j++) {
 			bool hasPrinted = false;
-			for (auto position : fallingBlock.positions) {
+			for (auto position : game.fallingBlock.positions) {
 				if (position.x == j && position.y == i) {
-					cout << ANSI_CODES[fallingBlock.color] << SQUARE << ANSI_CODES[DEFAULT];
+					cout << ANSI_CODES[game.fallingBlock.color] << SQUARE << ANSI_CODES[DEFAULT];
 					hasPrinted = true;
 					break;
 				}
@@ -218,7 +224,7 @@ void drawBoard(const Block& fallingBlock, const Block& predictedBlock, const Boa
 				}
 			}
 			if (hasPrinted) continue;
-			int color = (gameboard[i][j].state == 0) ? DEFAULT : gameboard[i][j].color;
+			int color = (game.gameboard[i][j].state == 0) ? DEFAULT : game.gameboard[i][j].color;
 			cout << ANSI_CODES[color] << SQUARE;
 		}
 		cout << ANSI_CODES[GRAY] << SQUARE;
@@ -234,7 +240,7 @@ void drawBoard(const Block& fallingBlock, const Block& predictedBlock, const Boa
 	for (int i = 0; i < 12; i++) cout << SQUARE;
 	cout << ANSI_CODES[DEFAULT] << '\n';
 	for (int i = 0; i < 10; i++) cout << SQUARE;
-	cout << "SCORE: " << score << '\n';
+	cout << "SCORE: " << game.score << '\n';
 }
 
 void initializeBoard(Board gameboard[HEIGHT][WIDTH]) {
@@ -243,49 +249,49 @@ void initializeBoard(Board gameboard[HEIGHT][WIDTH]) {
 			gameboard[i][j] = { 0,0 };
 }
 
-bool isCollision(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH]) {
-	for (auto position : fallingBlock.positions)
+bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
+	for (auto position : tetromino.positions)
 		if (gameboard[position.y][position.x].state == 1 || position.x < 0 || position.x >= WIDTH || position.y >= HEIGHT)
 			return true;
 	return false;
 }
 
-bool moveTetromino(Block& fallingBlock, int delta_x, int delta_y, Board gameboard[HEIGHT][WIDTH]) {
+bool moveTetromino(Block& tetromino, int delta_x, int delta_y, Board gameboard[HEIGHT][WIDTH]) {
 	Block newPosition;
 	for (int i = 0; i < 4; i++) {
-		newPosition.positions[i].x = fallingBlock.positions[i].x + delta_x;
-		newPosition.positions[i].y = fallingBlock.positions[i].y + delta_y;
+		newPosition.positions[i].x = tetromino.positions[i].x + delta_x;
+		newPosition.positions[i].y = tetromino.positions[i].y + delta_y;
 	}
 	if (isCollision(newPosition, gameboard)) return false;
 
-	for (int i = 0; i < 4; i++) fallingBlock.positions[i] = newPosition.positions[i];
+	for (int i = 0; i < 4; i++) tetromino.positions[i] = newPosition.positions[i];
 
 	return true;
 }
 
-void rotateTetromino(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
-	if (fallingBlock.color == YELLOW) return;
+void rotateTetromino(GameStatistics& game) {
+	if (game.fallingBlock.color == YELLOW) return;
 	Block newBlock;
 
-	Position reference = fallingBlock.positions[0];
+	Position reference = game.fallingBlock.positions[0];
 
 	for (int i = 0; i < 4; i++) {
-		newBlock.positions[i].x = reference.x - (fallingBlock.positions[i].y - reference.y);
-		newBlock.positions[i].y = reference.y + (fallingBlock.positions[i].x - reference.x);
+		newBlock.positions[i].x = reference.x - (game.fallingBlock.positions[i].y - reference.y);
+		newBlock.positions[i].y = reference.y + (game.fallingBlock.positions[i].x - reference.x);
 	}
 
 	int delta_y = 0;
-	while (isCollision(newBlock, gameboard) && delta_y > -5) {
+	while (isCollision(newBlock, game.gameboard) && delta_y > -5) {
 		int moveOrder[5] = { 0, 1, -1, 2, -2 };
 		for (int i = 0; i < 5; i++) {
-			if (moveTetromino(newBlock, moveOrder[i], delta_y, gameboard))
+			if (moveTetromino(newBlock, moveOrder[i], delta_y, game.gameboard))
 				break;
 		}
 		delta_y--;
 	}
 
 	if (delta_y != -5)
-		for (int i = 0; i < 4; i++) fallingBlock.positions[i] = newBlock.positions[i];
+		for (int i = 0; i < 4; i++) game.fallingBlock.positions[i] = newBlock.positions[i];
 }
 
 void fillBag(vector<int>& bag) {
@@ -299,112 +305,112 @@ void fillBag(vector<int>& bag) {
 	}
 }
 
-void spawnNewBlock(Block& fallingBlock, vector<int>& bag, const Board gameboard[HEIGHT][WIDTH]) {
-	char nextShape = bag[bag.size() - 1];
-	bag.pop_back();
+void spawnNewBlock(GameStatistics& game) {
+	char nextShape = game.bag[game.bag.size() - 1];
+	game.bag.pop_back();
 	switch (nextShape) {
 	case O:
-		fallingBlock.positions[0] = { 4, 0 };
-		fallingBlock.positions[1] = { 5, 0 };
-		fallingBlock.positions[2] = { 4, -1 };
-		fallingBlock.positions[3] = { 5, -1 };
-		fallingBlock.color = YELLOW;
+		game.fallingBlock.positions[0] = { 4, 0 };
+		game.fallingBlock.positions[1] = { 5, 0 };
+		game.fallingBlock.positions[2] = { 4, -1 };
+		game.fallingBlock.positions[3] = { 5, -1 };
+		game.fallingBlock.color = YELLOW;
 		break;
 	case I:
-		fallingBlock.positions[0] = { 4, 0 };
-		fallingBlock.positions[1] = { 3, 0 };
-		fallingBlock.positions[2] = { 5, 0 };
-		fallingBlock.positions[3] = { 6, 0 };
-		fallingBlock.color = CYAN;
+		game.fallingBlock.positions[0] = { 4, 0 };
+		game.fallingBlock.positions[1] = { 3, 0 };
+		game.fallingBlock.positions[2] = { 5, 0 };
+		game.fallingBlock.positions[3] = { 6, 0 };
+		game.fallingBlock.color = CYAN;
 		break;
 	case L:
-		fallingBlock.positions[0] = { 4, 0 };
-		fallingBlock.positions[1] = { 5, -1 };
-		fallingBlock.positions[2] = { 3, 0 };
-		fallingBlock.positions[3] = { 5, 0 };
-		fallingBlock.color = ORANGE;
+		game.fallingBlock.positions[0] = { 4, 0 };
+		game.fallingBlock.positions[1] = { 5, -1 };
+		game.fallingBlock.positions[2] = { 3, 0 };
+		game.fallingBlock.positions[3] = { 5, 0 };
+		game.fallingBlock.color = ORANGE;
 		break;
 	case J:
-		fallingBlock.positions[0] = { 5, 0 };
-		fallingBlock.positions[1] = { 4, -1 };
-		fallingBlock.positions[2] = { 6, 0 };
-		fallingBlock.positions[3] = { 4, 0 };
-		fallingBlock.color = BLUE;
+		game.fallingBlock.positions[0] = { 5, 0 };
+		game.fallingBlock.positions[1] = { 4, -1 };
+		game.fallingBlock.positions[2] = { 6, 0 };
+		game.fallingBlock.positions[3] = { 4, 0 };
+		game.fallingBlock.color = BLUE;
 		break;
 	case S:
-		fallingBlock.positions[0] = { 4, 0 };
-		fallingBlock.positions[1] = { 3, 0 };
-		fallingBlock.positions[2] = { 4, -1 };
-		fallingBlock.positions[3] = { 5, -1 };
-		fallingBlock.color = GREEN;
+		game.fallingBlock.positions[0] = { 4, 0 };
+		game.fallingBlock.positions[1] = { 3, 0 };
+		game.fallingBlock.positions[2] = { 4, -1 };
+		game.fallingBlock.positions[3] = { 5, -1 };
+		game.fallingBlock.color = GREEN;
 		break;
 	case Z:
-		fallingBlock.positions[0] = { 5, 0 };
-		fallingBlock.positions[1] = { 6, 0 };
-		fallingBlock.positions[2] = { 5, -1 };
-		fallingBlock.positions[3] = { 4, -1 };
-		fallingBlock.color = RED;
+		game.fallingBlock.positions[0] = { 5, 0 };
+		game.fallingBlock.positions[1] = { 6, 0 };
+		game.fallingBlock.positions[2] = { 5, -1 };
+		game.fallingBlock.positions[3] = { 4, -1 };
+		game.fallingBlock.color = RED;
 		break;
 	case T:
-		fallingBlock.positions[0] = { 4, 0 };
-		fallingBlock.positions[1] = { 3, 0 };
-		fallingBlock.positions[2] = { 5, 0 };
-		fallingBlock.positions[3] = { 4, -1 };
-		fallingBlock.color = PURPLE;
+		game.fallingBlock.positions[0] = { 4, 0 };
+		game.fallingBlock.positions[1] = { 3, 0 };
+		game.fallingBlock.positions[2] = { 5, 0 };
+		game.fallingBlock.positions[3] = { 4, -1 };
+		game.fallingBlock.color = PURPLE;
 		break;
 	}
 
-	if (bag.empty()) fillBag(bag);
+	if (game.bag.empty()) fillBag(game.bag);
 }
 
-void holdBlock(const Block& fallingBlock, vector<int>& bag, int& heldBlock) {
-	if (heldBlock != -1) bag.push_back(heldBlock);
-	heldBlock = fallingBlock.color;
+void holdBlock(GameStatistics& game) {
+	if (game.heldBlock != -1) game.bag.push_back(game.heldBlock);
+	game.heldBlock = game.fallingBlock.color;
 }
 
-void placeTetromino(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], vector<int>& bag, bool& gameover, bool& hasHeldBlock) {
+void placeTetromino(GameStatistics& game, bool& gameover, bool&hasHeldBlock) {
 	for (int i = 0; i < 4; i++)
-		gameboard[fallingBlock.positions[i].y][fallingBlock.positions[i].x] = { 1, fallingBlock.color };
+		game.gameboard[game.fallingBlock.positions[i].y][game.fallingBlock.positions[i].x] = { 1, game.fallingBlock.color };
 
-	spawnNewBlock(fallingBlock, bag, gameboard);
-	if (isCollision(fallingBlock, gameboard)) gameover = true;
+	spawnNewBlock(game);
+	if (isCollision(game.fallingBlock, game.gameboard)) gameover = true;
 	hasHeldBlock = false;
 }
 
-Block predictBlock(Block fallingBlock, Board gameboard[HEIGHT][WIDTH]) {
-	while (moveTetromino(fallingBlock, 0, 1, gameboard));
-	return fallingBlock;
+Block predictBlock(GameStatistics game) {
+	while (moveTetromino(game.fallingBlock, 0, 1, game.gameboard));
+	return game.fallingBlock;
 }
 
-void saveGame(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int linesCleared, vector<int> bag, int level, int heldBlock) {
-	bag.push_back(fallingBlock.color);
+void saveGame(GameStatistics game) {
+	game.bag.push_back(game.fallingBlock.color);
 
 	ofstream savedBag("bag.txt");
-	for (auto shape : bag) savedBag << shape;
+	for (auto shape : game.bag) savedBag << shape;
 	savedBag.close();
 
 	ofstream savedLevel("level.txt");
-	savedLevel << level;
+	savedLevel <<game.level;
 	savedLevel.close();
 
 	ofstream savedScore("score.txt");
-	savedScore << score;
+	savedScore << game.score;
 	savedScore.close();
 
 	ofstream savedHeldBlock("held block.txt");
-	savedHeldBlock << heldBlock;
+	savedHeldBlock << game.heldBlock;
 	savedHeldBlock.close();
 
 	ofstream savedLinesCleared("lines cleared.txt");
-	savedLinesCleared << linesCleared;
+	savedLinesCleared << game.linesCleared;
 	savedLinesCleared.close();
 
 	ofstream savedGameboardState("gameboard state.txt");
 	ofstream savedGameboardColor("gameboard color.txt");
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
-			savedGameboardState << gameboard[i][j].state;
-			savedGameboardColor << gameboard[i][j].color;
+			savedGameboardState << game.gameboard[i][j].state;
+			savedGameboardColor << game.gameboard[i][j].color;
 		}
 		savedGameboardState << endl;
 		savedGameboardColor << endl;
@@ -416,7 +422,7 @@ void saveGame(const Block& fallingBlock, const Board gameboard[HEIGHT][WIDTH], i
 	Sleep(1000);
 }
 
-void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIGHT][WIDTH], int score, int linesCleared, int level, vector<int> bag, int heldBlock) {
+void pauseMenu(bool &quit, GameStatistics game) {
 	bool redo;
 	do {
 		system("cls");
@@ -427,7 +433,7 @@ void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIG
 		case '1':
 			return;
 		case '2':
-			saveGame(fallingBlock, gameboard, score, linesCleared, bag, level, heldBlock);
+			saveGame(game);
 			redo = true;
 			break;
 		case '3':
@@ -441,40 +447,40 @@ void pauseMenu(bool &quit, const Block &fallingBlock, const Board gameboard[HEIG
 	system("cls");
 }
 
-void playerInputs(Block& fallingBlock, Board gameboard[HEIGHT][WIDTH], int& fallingDelay, vector<int>& bag, int& heldBlock, bool& hasHeldBlock, bool& gameover, int& score, int linesCleared, int level, chrono::steady_clock::time_point& lastTime, bool& quit) {
+void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, bool& gameover, chrono::steady_clock::time_point& lastTime, bool& quit) {
 	int key = 0;
 	if (_kbhit()) {
 		key = _getch();
 		switch (key) {
 		case ARROW_UP:
-			rotateTetromino(fallingBlock, gameboard);
+			rotateTetromino(game);
 			break;
 		case ARROW_LEFT:
-			moveTetromino(fallingBlock, -1, 0, gameboard);
+			moveTetromino(game.fallingBlock, -1, 0, game.gameboard);
 			break;
 		case ARROW_DOWN:
-			Block tempBlock = fallingBlock;
-			fallingDelay = (moveTetromino(tempBlock, 0, 1, gameboard)) ? 10 : fallingDelay;
+			Block tempBlock = game.fallingBlock;
+			fallingDelay = (moveTetromino(game.fallingBlock, 0, 1, game.gameboard)) ? 10 : fallingDelay;
 			break;
 		case ARROW_RIGHT:
-			moveTetromino(fallingBlock, 1, 0, gameboard);
+			moveTetromino(game.fallingBlock, 1, 0, game.gameboard);
 			break;
 		case SPACEBAR:
-			while (moveTetromino(fallingBlock, 0, 1, gameboard)) score += 2;
-			placeTetromino(fallingBlock, gameboard, bag, gameover, hasHeldBlock);
+			while (moveTetromino(game.fallingBlock, 0, 1, game.gameboard)) game.score += 2;
+			placeTetromino(game, gameover, hasHeldBlock);
 			lastTime = chrono::steady_clock::now();
 			break;
 		case 'w':
 		case 'W':
 			if (!hasHeldBlock) {
-				holdBlock(fallingBlock, bag, heldBlock);
-				spawnNewBlock(fallingBlock, bag, gameboard);
+				holdBlock(game);
+				spawnNewBlock(game);
 				lastTime = chrono::steady_clock::now();
 				hasHeldBlock = true;
 			}
 			break;
 		case 'p':
-			pauseMenu(quit, fallingBlock, gameboard, score, linesCleared, level, bag, heldBlock);
+			pauseMenu(quit, game);
 		}
 	}
 }
@@ -494,12 +500,12 @@ void clearedLinesAnimation(vector<int> fullLines) {
 	}
 }
 
-void clearLines(Board gameboard[HEIGHT][WIDTH], int& score, int& level, int& linesCleared) {
+void clearLines(GameStatistics& game) {
 	vector<int> fullLines;
 	for (int y = 0; y < HEIGHT; y++) {
 		bool isFullLine = true;
 		for (int x = 0; x < WIDTH; x++)
-			if (gameboard[y][x].state == 0) isFullLine = false;
+			if (game.gameboard[y][x].state == 0) isFullLine = false;
 
 		if (isFullLine) fullLines.push_back(y);
 	}
@@ -509,40 +515,40 @@ void clearLines(Board gameboard[HEIGHT][WIDTH], int& score, int& level, int& lin
 	for (int lineIndex : fullLines)
 		for (int y = lineIndex; y > 0; y--)
 			for (int x = 0; x < WIDTH; x++)
-				gameboard[y][x] = gameboard[y - 1][x];
+				game.gameboard[y][x] = game.gameboard[y - 1][x];
 
 	switch (fullLines.size()) {
 	case 1:
-		score += 100 * (level + 1);
+		game.score += 100 * (game.level + 1);
 		break;
 	case 2:
-		score += 300 * (level + 1);
+		game.score += 300 * (game.level + 1);
 		break;
 	case 3:
-		score += 500 * (level + 1);
+		game.score += 500 * (game.level + 1);
 		break;
 	case 4:
-		score += 800 * (level + 1);
+		game.score += 800 * (game.level + 1);
 		break;
 	}
 
-	linesCleared += fullLines.size();
-	if (linesCleared > (level + 1) * 10) level++;
+	game.linesCleared += fullLines.size();
+	if (game.linesCleared > (game.level + 1) * 10) game.level++;
 }
 
-void tetris(Board gameboard[HEIGHT][WIDTH], int &score, int linesCleared, vector <int> bag, int level, int heldBlock, bool gameLoaded, bool& gameover) {
+void tetris(GameStatistics game, bool gameLoaded, bool& gameover) {
 	system("cls");
 	cout << ANSI_CODES[HIDE_CURSOR];
 	if (!gameLoaded) {
-		initializeBoard(gameboard);
-		fillBag(bag);
-		heldBlock = -1;
-		score = 0;
-		linesCleared = 0;
+		initializeBoard(game.gameboard);
+		fillBag(game.bag);
+		game.heldBlock = -1;
+		game.score = 0;
+		game.linesCleared = 0;
 	}
 
-	Block fallingBlock, predictedBlock;
-	spawnNewBlock(fallingBlock, bag, gameboard);
+	Block predictedBlock;
+	spawnNewBlock(game);
 
 	gameover = false;
 	bool quit = false;
@@ -551,20 +557,20 @@ void tetris(Board gameboard[HEIGHT][WIDTH], int &score, int linesCleared, vector
 	bool hasHeldBlock = false;
 
 	while (!gameover && !quit) {
-		fallingDelay = (level > 19) ? fallingDelays[19] : fallingDelays[level];
-		playerInputs(fallingBlock, gameboard, fallingDelay, bag, heldBlock, hasHeldBlock, gameover, score, linesCleared, level, lastTime, quit);
+		fallingDelay = (game.level > 19) ? fallingDelays[19] : fallingDelays[game.level];
+		playerInputs(game, fallingDelay, hasHeldBlock, gameover, lastTime, quit);
 
 		if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
-			if (!moveTetromino(fallingBlock, 0, 1, gameboard))
-				placeTetromino(fallingBlock, gameboard, bag, gameover, hasHeldBlock);
+			if (!moveTetromino(game.fallingBlock, 0, 1, game.gameboard))
+				placeTetromino(game, gameover, hasHeldBlock);
 
-			score += (fallingDelay == 10) ? 2 : 1;
+			game.score += (fallingDelay == 10) ? 2 : 1;
 			lastTime = chrono::steady_clock::now();
 		}
 
-		predictedBlock = predictBlock(fallingBlock, gameboard);
-		drawBoard(fallingBlock, predictedBlock, gameboard, bag[bag.size() - 1], heldBlock, score, level);
-		clearLines(gameboard, score, level, linesCleared);
+		predictedBlock = predictBlock(game);
+		drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
+		clearLines(game);
 	}
 	if (quit) return;
 
@@ -572,51 +578,51 @@ void tetris(Board gameboard[HEIGHT][WIDTH], int &score, int linesCleared, vector
 	Sleep(3000);
 }
 
-void loadGame(Board gameboard[HEIGHT][WIDTH], int &score, vector<int> &bag, int &level, int& heldBlock, int &linesCleared) {
+void loadGame(GameStatistics& newGame) {
 	ifstream gameboardState("gameboard state.txt");
 	ifstream gameboardColor("gameboard color.txt");
 	int rowIndex = 0;
 	string row;
 	while (getline(gameboardState, row)) {
 		int columnIndex = 0;
-		for (char number : row) gameboard[rowIndex][columnIndex++].state = number - '0';
+		for (char number : row) newGame.gameboard[rowIndex][columnIndex++].state = number - '0';
 		rowIndex++;
 	}
 
 	rowIndex = 0;
 	while (getline(gameboardColor, row)) {
 		int columnIndex = 0;
-		for (char number : row) gameboard[rowIndex][columnIndex++].color = number - '0';
+		for (char number : row) newGame.gameboard[rowIndex][columnIndex++].color = number - '0';
 		rowIndex++;
 	}
 	gameboardState.close();
 	gameboardColor.close();
 
 	ifstream savedScore("score.txt");
-	savedScore >> score;
+	savedScore >> newGame.score;
 	savedScore.close();
 
 	ifstream savedLevel("level.txt");
-	savedLevel >> level;
+	savedLevel >> newGame.level;
 	savedLevel.close();
 
 	ifstream savedHeldBlock("held block.txt");
-	savedHeldBlock >> heldBlock;
+	savedHeldBlock >> newGame.heldBlock;
 	savedScore.close();
 
 	ifstream savedLinesCleared("lines cleared.txt");
-	savedLinesCleared >> linesCleared;
+	savedLinesCleared >> newGame.linesCleared;
 	savedLinesCleared.close();
 
 	ifstream savedBag("bag.txt");
 	string numbers;
 	getline(savedBag, numbers);
 	for (char number : numbers) {
-		bag.push_back(number - '0');
+		newGame.bag.push_back(number - '0');
 	}
 }
 
-bool startMenu(Board startingGameboard[HEIGHT][WIDTH], int& startingScore, vector<int>& startingBag, int& startingLevel, int& startingHeldBlock, int& startingLinesCleared, bool& gameLoaded, vector<int>& leaderboard) {
+bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<int>& leaderboard) {
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[SHOW_CURSOR];
 	system("cls");
 	cout << "LEADERBOARD\n";
@@ -628,11 +634,11 @@ bool startMenu(Board startingGameboard[HEIGHT][WIDTH], int& startingScore, vecto
 		switch (_getch()) {
 		case '1':
 			cout << "\nChoose starting level(0-19): ";
-			do cin >> startingLevel; while (!(startingLevel >= 0 && startingLevel <= 19));
+			do cin >> newGame.level; while (!(newGame.level >= 0 && newGame.level <= 19));
 			gameLoaded = false;
 			return true;
 		case '2':
-			loadGame(startingGameboard, startingScore, startingBag, startingLevel, startingHeldBlock, startingLinesCleared);
+			loadGame(newGame);
 			gameLoaded = true;
 			return true;
 		case '3':
@@ -649,16 +655,14 @@ int main() {
 	srand(time(0));
 	bool run = true;
 	while (run) {
-		int startingLevel, score, startingHeldBlock, startingLinesCleared;
-		vector <int> startingBag;
+		GameStatistics newGame;
 		vector <int> leaderboard;
-		Board startingGameboard[HEIGHT][WIDTH];
-		bool gameLoaded, gameover;
+		bool gameLoaded, gameover = false;
 		
-		run = startMenu(startingGameboard, score, startingBag, startingLevel, startingHeldBlock, startingLinesCleared, gameLoaded, leaderboard);
+		run = startMenu(newGame, gameLoaded, leaderboard);
 		
-		if(run) tetris(startingGameboard, score, startingLinesCleared, startingBag, startingLevel, startingHeldBlock, gameLoaded, gameover);
-		if(gameover) writeHighscore(score, leaderboard);
+		if(run) tetris(newGame, gameLoaded, gameover);
+		if(gameover) writeHighscore(newGame.score, leaderboard);
 	}
 	return 0;
 }
