@@ -652,7 +652,7 @@ void clearLines(GameStatistics& game) {
 		break;
 	}
 	//Ökar totala lines cleared
-	game.linesCleared += fullLines.size();
+	game.linesCleared += (int)fullLines.size();
 	//Om linesCleared är mer än 10x leveln + 1, så ökar leveln
 	if (game.linesCleared > (game.level + 1) * 10) game.level++;
 }
@@ -669,9 +669,9 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	int fallingDelay;
 	bool hasHeldBlock = false;
 	auto lastTime = chrono::steady_clock::now();
-	Block predictedBlock = predictBlock(game);
-	
+
 	spawnNewBlock(game);
+	Block predictedBlock = predictBlock(game);
 	drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
 	//Räknar ner från 3 innan det startar igen
 	for (int i = 3; i > 0; i--) {
@@ -816,7 +816,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<int>& leaderboa
 }
 
 int main() {
-	srand(time(0));
+	srand((int)time(0));
 	bool run = true;
 	//Main loop som gör att man kommer tillbaka till meny när spelet är över
 	while (run) {
