@@ -72,82 +72,91 @@ enum Input {
 };
 
 struct Board {
-	int state;
-	int color;
+	int state = 0;
+	int color = DEFAULT;
 };
 
 struct Position {
-	int x;
-	int y;
+	int x = 0;
+	int y = 0;
 };
 
 struct Block {
 	Position positions[4];
-	int color;
+	int color = DEFAULT;
 };
 
 struct GameStatistics {
-	Block fallingBlock;
-	Board gameboard[HEIGHT][WIDTH];
-	vector <int> bag;
-	int score;
-	int level;
-	int linesCleared;
-	int heldBlock;
+	Block fallingBlock = {};
+	Board gameboard[HEIGHT][WIDTH] = {};
+	vector <int> bag = {};
+	int score = 0;
+	int level = 0;
+	int linesCleared = 0;
+	int heldBlock = -1;
 };
 
 const string SQUARE = "  ";
 
 //Funktion för att läsa leaderboard från txt fil
 void readLeaderboard(vector <int>& scores) {
+	//Tömmer listan på leaderboard scores om den redan har lästs en gång
+	scores.clear();
+	//Öppnar leaderboard txt filen
 	ifstream leaderboard("leaderboard.txt");
+	//Kollar om den gick att öppna
 	if (!leaderboard) {
 		cout << "Could not read the file";
 		return;
 	}
+	//Hämtar varje rad i filen och lägger värdet på raden i scores vectorn
 	string scoreStr;
-	while (getline(leaderboard, scoreStr)) {
-		scores.push_back(stoi(scoreStr));
-	}
+	while (getline(leaderboard, scoreStr)) scores.push_back(stoi(scoreStr));
+	//Stänger filen
 	leaderboard.close();
-	for (int i = 0; i < scores.size(); i++) {
-		cout << i + 1 << ". " << scores[i] << '\n';
-	}
+	//Skriver ut topplistan
+	for (int i = 0; i < scores.size(); i++) cout << i + 1 << ". " << scores[i] << '\n';
 }
 
 //Funktion för att skriva highscore till leaderboard
 void writeHighscore(int gameScore, vector<int> scores) {
+	//Öppnar leaderboard filen
 	ofstream leaderboard("leaderboard.txt");
-
+	//Kollar så att den lyckades öppna
 	if (!leaderboard) {
-		cout << "Lyckades inte skriva till filen";
+		cout << "Could not write to the file\n";
 		return;
 	}
-
+	//Vector för de olika nya scoresen i leaderboard
 	vector <int> newLeaderboard;
 	bool hasEntered = false;
+	//Loopar genom varje score som lästes innan spelet
 	for (int i = 0; i < scores.size(); i++) {
+		//Kollar om spelarens score är bättre än något av listans och att score inte redan skrivit. I så fall skrivs score före
 		if (gameScore > scores[i] && !hasEntered) {
 			newLeaderboard.push_back(gameScore);
 			hasEntered = true;
+			//Går tillbaka ett index i scores för att lägga in den nerflyttade scoren också
 			i--;
 		}
-		else {
-			newLeaderboard.push_back(scores[i]);
-		}
+		else newLeaderboard.push_back(scores[i]);
 	}
+	//Om storleken för den nya leaderboaren är mer än 10 så tar den bort sista elementet
 	if (newLeaderboard.size() > 10) newLeaderboard.pop_back();
-	for (int score : newLeaderboard) {
-		leaderboard << score << endl;
-	}
+	//Skriver varje score på leaderboard till txt filen
+	for (int score : newLeaderboard) leaderboard << score << endl;
 
+	//Stänger filen
 	leaderboard.close();
 }
 
 //Ritar vald rad av en tetromino. För hold och next block
 void drawTetromino(int block, int row) {
+	//Array för de 2 raderna i blocken
 	string output[2];
+	//Kollar vilket block det är
 	switch (block) {
+		//Output får båda raderna tilldelade
 	case O:
 		output[0] = ANSI_CODES[DEFAULT] + SQUARE + ANSI_CODES[YELLOW] + SQUARE + SQUARE + ANSI_CODES[DEFAULT] + SQUARE;
 		output[1] = output[0];
@@ -181,6 +190,7 @@ void drawTetromino(int block, int row) {
 		output[1] = output[0];
 		break;
 	}
+	//Skriver bara ut den raden som ska skrivas ut
 	cout << output[row] << ANSI_CODES[DEFAULT];
 }
 
@@ -191,24 +201,32 @@ void drawBoard(const GameStatistics& game, const Block& predictedBlock, int next
 	//Skriver ut leveln
 	for (int i = 0; i < 10; i++) cout << SQUARE;
 	cout << "LEVEL: " << game.level << '\n';
-	//Skiver ut övre ramen
+	//Skiver ut övre ramen med grå bakgrundsfärg
 	for (int i = 0; i < 6; i++) cout << SQUARE;
 	cout << ANSI_CODES[GRAY];
 	for (int i = 0; i < 12; i++) cout << SQUARE;
 	cout << '\n';
 
+	//Loopar genom brädets höjd
 	for (int i = 0; i < HEIGHT; i++) {
-
+		//Skriver ut en tom ruta för whitespace
 		cout << ANSI_CODES[DEFAULT] << SQUARE;
+		//Om höjden är 0 skrivs HOLD ut innan själva brädet
 		if (i == 0) cout << "  HOLD  ";
+		//Om 2 skrivs en rad av holdade blocket ut och 3 andra
 		else if (i == 2) drawTetromino(game.heldBlock, 0);
 		else if (i == 3) drawTetromino(game.heldBlock, 1);
+		//Annars skriver den ut blankrader
 		else drawTetromino(-1, 0);
+		//Skriver ut en tom ruta för whitespace
 		cout << ANSI_CODES[DEFAULT] << SQUARE;
 
+		//Skriver ut ram
 		cout << ANSI_CODES[GRAY] << SQUARE << ANSI_CODES[DEFAULT];
+		//Loopar genom spelplans raden
 		for (int j = 0; j < WIDTH; j++) {
 			bool hasPrinted = false;
+			//Om falling block är på denna positionen så skrivs blockets färg ut
 			for (auto position : game.fallingBlock.positions) {
 				if (position.x == j && position.y == i) {
 					cout << ANSI_CODES[game.fallingBlock.color] << SQUARE << ANSI_CODES[DEFAULT];
@@ -216,6 +234,7 @@ void drawBoard(const GameStatistics& game, const Block& predictedBlock, int next
 					break;
 				}
 			}
+			//Om predicted block är på denna positionen och fallingblock inte skrevs ut skrivs en grå ruta ut
 			for (auto position : predictedBlock.positions) {
 				if (position.x == j && position.y == i && !hasPrinted) {
 					cout << ANSI_CODES[DARK_GRAY] << SQUARE << ANSI_CODES[DEFAULT];
@@ -224,18 +243,22 @@ void drawBoard(const GameStatistics& game, const Block& predictedBlock, int next
 					ANSI_CODES[predictedBlock.color];
 				}
 			}
-			if (hasPrinted) continue;
-			int color = (game.gameboard[i][j].state == 0) ? DEFAULT : game.gameboard[i][j].color;
-			cout << (game.gameboard[i][j].state == 0 ? ANSI_CODES[DEFAULT] : ANSI_CODES[game.gameboard[i][j].color]) << SQUARE;
-		}
+			if (hasPrinted) continue; //Om fallingBlock eller predictedblock är printat hoppar den över resten i loopen
 
-		cout << ANSI_CODES[GRAY] << SQUARE;
-		cout << ANSI_CODES[DEFAULT] << SQUARE;
+			//Annars skriver den ut brädets färg
+			cout << ANSI_CODES[game.gameboard[i][j].color] << SQUARE;
+		}
+		//Skriv ut ram + blankrad
+		cout << ANSI_CODES[GRAY] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE;
+		//Om höjden är 0 skrivs NEXT ut efter brädet
 		if (i == 0) cout << "  NEXT  ";
+		//Om 2 skrivs en rad av nästa blocket ut och 3 andra
 		else if (i == 2) drawTetromino(nextBlock, 0);
 		else if (i == 3) drawTetromino(nextBlock, 1);
-		cout << ANSI_CODES[DEFAULT] << SQUARE << '\n';
+		//Byt rad
+		cout << '\n';
 	}
+	//Skriver ut bottenraden och score under
 	for (int i = 0; i < 6; i++) cout << SQUARE;
 	cout << ANSI_CODES[GRAY];
 	for (int i = 0; i < 12; i++) cout << SQUARE;
@@ -244,20 +267,17 @@ void drawBoard(const GameStatistics& game, const Block& predictedBlock, int next
 	cout << "SCORE: " << game.score << '\n';
 }
 
-//Tömmer spelbrädet
-void initializeBoard(Board gameboard[HEIGHT][WIDTH]) {
-	for (int i = 0; i < HEIGHT; i++)
-		for (int j = 0; j < WIDTH; j++)
-			gameboard[i][j] = { 0,0 };
-}
-
 //Kollar om ett block ligger i ett annat eller utanför planen
 bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
+	//Loopar genom varje position i blocket
 	for (auto position : tetromino.positions)
+		//Om positionen är på brädet
 		if (position.x >= 0 && position.x <= WIDTH - 1 && position.y >= 0 && position.y <= HEIGHT - 1) {
+			//Kollar om det ligger en tetromino på den positionen
 			if (gameboard[position.y][position.x].state == 1)
-				return true;
+				return true; //I så fall returner true
 		}
+		//Annar om positionen är utanför brädet höger/vänster/ner så är det också kollision(uppåt får den vara)
 		else if (position.x < 0 || position.x >= WIDTH || position.y >= HEIGHT) {
 			return true;
 		}
@@ -266,13 +286,18 @@ bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
 
 //Flyttar en tetromino åt olika håll
 bool moveTetromino(Block& tetromino, int delta_x, int delta_y, Board gameboard[HEIGHT][WIDTH]) {
+	//Variabel för den nya positonen
 	Block newPosition;
+	//Loopar genom varje position
 	for (int i = 0; i < 4; i++) {
+		//newPosition får gamla positionen + delta_x/y
 		newPosition.positions[i].x = tetromino.positions[i].x + delta_x;
 		newPosition.positions[i].y = tetromino.positions[i].y + delta_y;
 	}
+	//Om det blir kollision flyttar den inte
 	if (isCollision(newPosition, gameboard)) return false;
 
+	//Annars får tetrominon de nya positionerna
 	for (int i = 0; i < 4; i++) tetromino.positions[i] = newPosition.positions[i];
 
 	return true;
@@ -280,46 +305,61 @@ bool moveTetromino(Block& tetromino, int delta_x, int delta_y, Board gameboard[H
 
 //Roterar tetromino medurs + flyttar den om den ligger på ogiltig plats
 void rotateTetromino(GameStatistics& game) {
+	//Gul/O tetromino kan inte rotera
 	if (game.fallingBlock.color == YELLOW) return;
+	
+	//Variabel för hur den nya blocket kommer ligga
 	Block newBlock;
 
+	//Sätter position 0 i blocket som referens
 	Position reference = game.fallingBlock.positions[0];
 
+	//Loopar genom varje bit i blocket
 	for (int i = 0; i < 4; i++) {
+		//y koordinater i referens till referensen blir negativa y koordinat i referens efteråt
+		//x koordinater i referens till referensen blir samma y koordinat i referens efteråt
 		newBlock.positions[i].x = reference.x - (game.fallingBlock.positions[i].y - reference.y);
 		newBlock.positions[i].y = reference.y + (game.fallingBlock.positions[i].x - reference.x);
 	}
 
+	//Om det roterade blocket hamnat i ett annat block så flyttas det till en giltig plats om det är tillräckligt nära
 	int delta_y = 0;
 	while (isCollision(newBlock, game.gameboard) && delta_y > -5) {
+		//Array som bestämmer vilken ordning delta_x ska testas
 		int moveOrder[5] = { 0, 1, -1, 2, -2 };
+		//Loopar alla delta_x och försöker flytta
 		for (int i = 0; i < 5; i++) {
-			if (moveTetromino(newBlock, moveOrder[i], delta_y, game.gameboard))
+			//Om det går att flytta så breakar den ut ur for loopen
+			if (moveTetromino(newBlock, moveOrder[i], delta_y, game.gameboard)) 
 				break;
 		}
+		//Nästa loop så öka delta y med 1 och samma delta x testas
 		delta_y--;
 	}
-
+	//Om en giltig posiiton hittades tillräckligt nära tilldelas fallingBlock newBlocks positioner
 	if (delta_y != -5)
 		for (int i = 0; i < 4; i++) game.fallingBlock.positions[i] = newBlock.positions[i];
 }
 
 //Fyller bag med de 7 formerna i random ordning
 void fillBag(vector<int>& bag) {
+	//Loopar tills bag.size() = 7
 	while (bag.size() != 7) {
-		int randomShape = rand() % 7;
-		bool alreadyInBag = false;
-		for (auto shape : bag)
+		int randomShape = rand() % 7; //Väljer ett random tal 0-6 som representerar en tetromino
+		bool alreadyInBag = false; 
+		for (auto shape : bag) //Kollar om den formen redan ligger i bagen
 			if (randomShape == shape) alreadyInBag = true;
 
-		if (!alreadyInBag) bag.push_back(randomShape);
+		if (!alreadyInBag) bag.push_back(randomShape); //Om den inte finns så läggs den i bagen
 	}
 }
 
 //Ger fallingBlock startposition och random form/färg
 void spawnNewBlock(GameStatistics& game) {
+	//Hittar sista värdet i bag och sparar det
 	char nextShape = game.bag[game.bag.size() - 1];
-	game.bag.pop_back();
+	game.bag.pop_back();//Tar bort sista elementet
+	//Kollar vilken form som är nästa och anger start position och färg till fallingBlock. 
 	switch (nextShape) {
 	case O:
 		game.fallingBlock.positions[0] = { 4, 0 };
@@ -372,35 +412,46 @@ void spawnNewBlock(GameStatistics& game) {
 		break;
 	}
 
+	//Om bagen är tom så fylls den på igen
 	if (game.bag.empty()) fillBag(game.bag);
 }
 
 //Byter ut det fallande blocket mot det som hålls och tvär om
 void holdBlock(GameStatistics& game) {
+	//Om det hålls ett block så läggs det blocket längst fram i kön/bagen
 	if (game.heldBlock != -1) game.bag.push_back(game.heldBlock);
+	//Lägger fallingblock i hold
 	game.heldBlock = game.fallingBlock.color;
 }
 
 //Lägger det fallande blocket på brädet
 void placeTetromino(GameStatistics& game, bool& gameover, bool& hasHeldBlock) {
+	//Loopar genom alla positioner för det fallande blocker
 	for (int i = 0; i < 4; i++)
+		//Sätter gamestate på den platsen till 1 och färgen till fallande blocket färg
 		game.gameboard[game.fallingBlock.positions[i].y][game.fallingBlock.positions[i].x] = { 1, game.fallingBlock.color };
 
+	//Spawnar nytt block
 	spawnNewBlock(game);
+	//Kollar om det är kollision direkt, ist gameover
 	if (isCollision(game.fallingBlock, game.gameboard)) gameover = true;
+	//Tillåter spelaren att hålla block igen
 	hasHeldBlock = false;
 }
 
 //Förutser var det fallande blocket kommer hamna och skickar tillbaka det
 Block predictBlock(GameStatistics game) {
+	//Flyttar block neråt tills det inte går mer
 	while (moveTetromino(game.fallingBlock, 0, 1, game.gameboard));
+	//Skickar tillbaka blocket
 	return game.fallingBlock;
 }
 
 //Sparar olika värden i txt filer för att kunna fortsätta på samma ställe nästa gång
-void saveGame(GameStatistics game) {
-	game.bag.push_back(game.fallingBlock.color);
-
+void saveGame(const GameStatistics& game) {
+//Öppnar text filerna för de sparade värdena
+//Läser och anger värdena till game
+//Stänger filen
 	ofstream savedBag("bag.txt");
 	for (auto shape : game.bag) savedBag << shape;
 	savedBag.close();
@@ -433,30 +484,51 @@ void saveGame(GameStatistics game) {
 	}
 	savedGameboardState.close();
 	savedGameboardColor.close();
-	cout << "\033[8;22HSAVED";
-	Sleep(1000);
-	cout << "\033[8;22H     ";
+}
+
+//Anger startvärden för ett helt nytt tetris
+void initializeGame(GameStatistics& game) {
+	game.bag.clear(); //Tömmer bag
+	fillBag(game.bag); //Fyller den på nytt
+	//Sätter hela gameboard till state 0 och färg default
+	for (int i = 0; i < HEIGHT; i++)
+		for (int j = 0; j < WIDTH; j++)
+			game.gameboard[i][j] = { 0,DEFAULT };
+	game.heldBlock = -1; //inget held block
+	game.level = game.linesCleared = game.score = 0; //Level, lines cleared och score = 0
 }
 
 //Meny när man pausar med olika menyval
-void pauseMenu(bool &quit, GameStatistics game) {
+void pauseMenu(bool& quit, bool& gameover, GameStatistics game) {
 	bool redo;
 	//Loopar tills användaren lämnar menyn
 	do {
 		//Skriver ut menyvalen
 		cout << "\033[10;22H" << "PAUSED";
-		cout << "\033[11;19H[1]CONTINUE\033[12;19H[2]SAVE GAME\033[13;21H[3]QUIT";
+		cout << "\033[11;19H[1]CONTINUE\033[12;16H[2]SAVE AND QUIT\033[13;21H[3]QUIT";
+
 		redo = false;
 		switch (_getch()) {
-		case '1': //Gå tillbaka till spelet
-			return;
-		case '2': //Sparar spelet och loopar igen
-			saveGame(game);
-			redo = true;
-			break;
-		case '3': //Avslutar spelet
+		case '1': 
+			//Skriver över meny texten
+			cout << "\033[10;22H      \033[11;19H           \033[12;16H                \033[13;21H       ";
+			//Räknar ner från 3 innan det startar igen
+			for (int i = 3; i > 0; i--) {
+				cout << "\033[12;25H" << i;
+				Sleep(500);
+			}
+			return;//Gå tillbaka till spelet
+		case '2': 
+			game.bag.push_back(game.fallingBlock.color);
+			saveGame(game); //Sparar spelet
+			cout << "\033[8;22HSAVING";
+			Sleep(1000);
 			quit = true;
 			return;
+		case '3': 
+			gameover = true; //Avslutar spelet
+			return;
+
 		default: //Loopar igen
 			redo = true;
 			break;
@@ -480,12 +552,13 @@ void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, b
 		case ARROW_LEFT: //Om vänster flytta fallande block vänster
 			moveTetromino(game.fallingBlock, -1, 0, game.gameboard);
 			break;
-		case ARROW_DOWN: //Om ner minska fallDelay till 10 ms
+		case ARROW_DOWN: { //Om ner minska fallDelay till 10 ms
 			//Kollar om den träffar marken nästa steg. 
 			// I så fall ökas inte hastigheten så att man kan flytta/rotera blocket efter att det kommit till botten
 			Block tempBlock = game.fallingBlock;
-			fallingDelay = (moveTetromino(game.fallingBlock, 0, 1, game.gameboard)) ? 10 : fallingDelay;
+			fallingDelay = (moveTetromino(tempBlock, 0, 1, game.gameboard)) ? 10 : fallingDelay;
 			break;
+		}
 		case ARROW_RIGHT: //Om pil höger flytta fallande block höger
 			moveTetromino(game.fallingBlock, 1, 0, game.gameboard);
 			break;
@@ -511,7 +584,7 @@ void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, b
 			}
 			break;
 		case 'p': //Om p så pausas spelet
-			pauseMenu(quit, game);
+			pauseMenu(quit, gameover, game);
 		}
 	}
 }
@@ -589,28 +662,22 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	//Rensar skärmen och gömmer musmarkören
 	system("cls");
 	cout << ANSI_CODES[HIDE_CURSOR];
-	//Om ett spel inte redan blivit loadat ska startvärden sättar.
-	if (!gameLoaded) {
-		//Sätter brädet state och färg till 0
-		initializeBoard(game.gameboard);
-		//Fyller bag med random former
-		fillBag(game.bag);
-		//Sätter att ingen block hålls
-		game.heldBlock = -1;
-		//Score och linescleared till 0;
-		game.score = 0;
-		game.linesCleared = 0;
-	}
 
-	//Standard variabler oavsett om spel är loadat eller inte
-	Block predictedBlock;
+	//Standard variabler varje spel
+	
 	bool quit = false;
 	int fallingDelay;
 	bool hasHeldBlock = false;
 	auto lastTime = chrono::steady_clock::now();
-
-	//Skapar ett nytt block som börjar uppifrån
+	Block predictedBlock = predictBlock(game);
+	
 	spawnNewBlock(game);
+	drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
+	//Räknar ner från 3 innan det startar igen
+	for (int i = 3; i > 0; i--) {
+		cout << "\033[12;25H" << i;
+		Sleep(500);
+	}
 	//Spelloop som körs så länge som det inte är gameover eller spelaren har valt quit från menyn
 	while (!gameover && !quit) {
 		//FallingDelay sätts beroende på level från en lista. Alla levlar mer än 19 har samma hastighet
@@ -638,7 +705,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	}
 	//När spelet är över kollar den om det är över pga gameover eller quit
 	if (quit) return; //Om quit kommer man till meny direkt
-	cout << "GAMEOVER"; // Annars skrivs gameover ut i 3 sekunder
+	cout << "\033[12;21H\033[31mGAMEOVER" << ANSI_CODES[DEFAULT]; // Annars skrivs gameover ut i 3 sekunder
 	Sleep(3000);
 }
 
@@ -687,27 +754,39 @@ void loadGame(GameStatistics& newGame) {
 	ifstream savedBag("bag.txt");
 	string numbers;
 	getline(savedBag, numbers);
-	for (char number : numbers) {
-		newGame.bag.push_back(number - '0');
-	}
+
+	for (char number : numbers) newGame.bag.push_back(number - '0');
+
+	savedBag.close();
 }
 
 //Startmeny med leaderboard och olika val
 bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<int>& leaderboard) {
 	//Återställer text färger och visar musmarkör
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[SHOW_CURSOR];
-	system("cls");
-	//Visar leaderboarden
-	cout << "LEADERBOARD\n";
-	readLeaderboard(leaderboard);
-	//Skriver ut valen användaren har
-	cout << "[1]Start New Game\n[2]Load Game\n[3]QUIT";
+	
 	bool redo;
 	//Så länge användaren skriver fel input loopas det
 	do {
+		system("cls");
+		//Visar leaderboarden
+		cout << "LEADERBOARD\n\n";
+		readLeaderboard(leaderboard);
+		//Skriver ut valen användaren har
+		cout << "\n[1]START NEW GAME\n[2]LOAD GAME\n[3]QUIT";
 		redo = false;
 		switch (_getch()) {
 		case '1': //Start new game
+			cout << "\n\nThe new game will overwrite the current saved game\nAre you sure you want to continue?\n\n[1]YES\n[2]NO";
+			switch (_getch()) {
+			case '1':
+				break;
+			default:
+				redo = true;
+				break;
+			}
+			if (redo) break;
+
 			//Ber användaren välja startlevel
 			cout << "\nChoose starting level(0-19): ";
 			//Loopar tills användare valj giltig level att starta på
@@ -742,6 +821,7 @@ int main() {
 	//Main loop som gör att man kommer tillbaka till meny när spelet är över
 	while (run) {
 		GameStatistics newGame;
+		initializeGame(newGame);
 		vector <int> leaderboard;
 		bool gameLoaded, gameover = false;
 		
@@ -751,7 +831,12 @@ int main() {
 		//Om användaren inte valt quit startar spelet med startvärden om användaren valt
 		if(run) tetris(newGame, gameLoaded, gameover);
 		//Om det blivit gameover(inte valt quit själv) ska scoret läggas in på leaderboard om det är bättre än 10an
-		if(gameover && newGame.score > leaderboard[9]) writeHighscore(newGame.score, leaderboard);
+		if (gameover && newGame.score > leaderboard[9]) {
+			writeHighscore(newGame.score, leaderboard);
+			//Spara ett tomt spel så att den gamla sparfilen inte ligger kvar
+			initializeGame(newGame);
+			saveGame(newGame);
+		}
 	}
 	return 0;
 }
