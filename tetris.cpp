@@ -109,9 +109,8 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 	leaderboard.clear();
 	//Öppnar leaderboard txt filerna
 	ifstream leaderboardScores("highscores.txt");
-	std::ifstream leaderboardNames("names.txt");
 	//Kollar om de gick att öppna
-	if (!leaderboardScores || !leaderboardNames) {
+	if (!leaderboardScores) {
 		cout << "Could not read the file";
 		return;
 	}
@@ -121,21 +120,16 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 	//Stänger filen
 	leaderboardScores.close();
 
-	string name;
-	int index = 0;
-	while (getline(leaderboardNames, name)) leaderboard[index++].name = name;
-	leaderboardNames.close();
 	//Skriver ut topplistan
-	for (int i = 0; i < leaderboard.size(); i++) cout << i + 1 << ". " << leaderboard[i].score << " by " << leaderboard[i].name << '\n';
+	for (int i = 0; i < leaderboard.size(); i++) cout << i + 1 << ". " << leaderboard[i].score << '\n';
 }
 
 //Funktion för att skriva highscore till leaderboard
 void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	//Öppnar leaderboard filen
 	ofstream leaderboardScore("highscores.txt");
-	ofstream leaderboardName("names.txt");
 	//Kollar så att den lyckades öppna
-	if (!leaderboardScore || !leaderboardName) {
+	if (!leaderboardScore) {
 		cout << "Could not write to the file\n";
 		return;
 	}
@@ -146,28 +140,23 @@ void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	for (int i = 0; i < leaderboard.size(); i++) {
 		//Kollar om spelarens score är bättre än något av listans och att score inte redan skrivit. I så fall skrivs score före
 		if (gameScore > leaderboard[i].score && !hasEntered) {
-			string userName;
-			cout << "\033[25;10HYou made the leaderboard! Enter your name: ";
-			getline(cin, userName);
-			newLeaderboard.push_back({ gameScore , userName});
+			newLeaderboard.push_back({ gameScore , "Name"});
 			hasEntered = true;
-			//Går tillbaka ett index i scores för att lägga in den nerflyttade scoren också
+			//Går tillbaka ett index i scores för att lägga in den nerflyttade scoren också. Annars hoppas den över
 			i--;
 		}
-		else newLeaderboard.push_back({ leaderboard[i].score, leaderboard[i].name});
+		else newLeaderboard.push_back({ leaderboard[i].score, "Name"});
 	}
 	//Om storleken för den nya leaderboaren är mer än 10 så tar den bort sista elementet
 	if (newLeaderboard.size() > 10) newLeaderboard.pop_back();
 	//Skriver varje score på leaderboard till txt filen
 	for (Leaderboard placement : newLeaderboard) {
 		leaderboardScore << placement.score << endl;
-		leaderboardName << placement.name << endl;
 	}
 
 
 	//Stänger filerna
 	leaderboardScore.close();
-	leaderboardName.close();
 }
 
 //Ritar vald rad av en tetromino. För hold och next block
@@ -847,7 +836,7 @@ int main() {
 	bool run = true;
 	//Main loop som gör att man kommer tillbaka till meny när spelet är över
 	while (run) {
-		GameStatistics newGame;
+		GameStatistics newGame = {};
 		initializeGame(newGame);
 		vector <Leaderboard> leaderboard;
 		bool gameLoaded, gameover = false;
@@ -857,9 +846,10 @@ int main() {
 		
 		//Om användaren inte valt quit startar spelet med startvärden om användaren valt
 		if(run) tetris(newGame, gameLoaded, gameover);
-		//Om det blivit gameover(inte valt quit själv) ska scoret läggas in på leaderboard om det är bättre än 10an
-		if (gameover && newGame.score > leaderboard[9].score) {
-			writeHighscore(newGame.score, leaderboard);
+		//Om det blivit gameover ska scoret läggas in på leaderboard om det är bättre än 10an
+		if (gameover) {
+			if (newGame.score > leaderboard[leaderboard.size()-1].score)
+				writeHighscore(newGame.score, leaderboard);
 			//Spara ett tomt spel så att den gamla sparfilen inte ligger kvar
 			initializeGame(newGame);
 			saveGame(newGame);
