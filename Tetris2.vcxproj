@@ -134,8 +134,10 @@
     <Text Include="gameboard color.txt" />
     <Text Include="gameboard state.txt" />
     <Text Include="held block.txt" />
-    <Text Include="leaderboard.txt" />
+    <Text Include="highscores.txt" />
     <Text Include="lines cleared.txt" />
+    <Text Include="names.txt" />
+    <Text Include="README.txt" />
     <Text Include="score.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
