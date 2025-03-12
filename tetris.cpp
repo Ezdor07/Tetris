@@ -24,6 +24,8 @@ const string ANSI_CODES[]{
 	"\033[m",
 	"\033[100m",
 	"\033[48;5;235m",
+	"\033[47m",
+	"\033[30m",
 	"\033[H",
 	"\033[?25l",
 	"\033[?25h"
@@ -58,6 +60,8 @@ enum AnsiCodeIndexes {
 	DEFAULT,
 	GRAY,
 	DARK_GRAY,
+	WHITE,
+	BLACK_TEXT,
 	RESET_CURSOR,
 	HIDE_CURSOR,
 	SHOW_CURSOR
@@ -515,32 +519,65 @@ void countDown() {
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
 
+int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
+	int playerChoice = 1;
+	bool redo;
+	do {
+		//Skriver ut valen användaren har
+		for (int i = 0; i < optionsCount; i++) { //Loopar så många gånger som det finns options
+			if (playerChoice == i + 1) cout << ANSI_CODES[WHITE] << ANSI_CODES[BLACK_TEXT]; //Skriver vit bakgrund svart text om det är detta index som är spelarens val
+			else cout << ANSI_CODES[DEFAULT]; //Annars är det vanlig färg
+			cout << "\033[" << posY + i << ";" << posX << "H"; //Flyttar musmarkören till rätt position
+			cout << text[i]; //Skriver ut i:te alternativet i menyn
+		}
+		//Kollar om användaren byter val eller väljer det markerade valet
+		redo = true;
+		switch (_getch()) {
+		case ARROW_UP:
+			if (playerChoice > 1) playerChoice--;
+			break;
+		case ARROW_DOWN:
+			if (playerChoice < optionsCount) playerChoice++;
+			break;
+		case 13:
+			redo = false;
+			break;
+		default:
+			break;
+		}
+	} while (redo);
+	//Återställer färg
+	cout << ANSI_CODES[DEFAULT];
+	return playerChoice; //Returnerar spelarens val
+}
+
 //Meny när man pausar med olika menyval
 void pauseMenu(bool& quit, bool& gameover, GameStatistics game, chrono::steady_clock::time_point& lastTime) {
 	bool redo;
 	//Loopar tills användaren lämnar menyn
 	do {
-		//Skriver ut menyvalen
+		//Visar att spelet är pausat mitt på skärmen
 		cout << "\033[10;22H" << "PAUSED";
-		cout << "\033[11;19H[1]CONTINUE\033[12;16H[2]SAVE AND QUIT\033[13;21H[3]QUIT";
 
 		redo = false;
-		switch (_getch()) {
-		case '1': 
+		//vector för de olika menyvalen
+		vector<string> menuText = { "[1]CONTINUE", "[2]SAVE AND QUIT", "[3]QUIT" };
+		switch (menuChoice(3, 19, 11, menuText)) {
+		case 1: 
 			//Skriver över meny texten
 			cout << "\033[10;22H      \033[11;19H           \033[12;16H                \033[13;21H       ";
 			//Räknar ner från 3 innan det startar igen
 			countDown();
 			lastTime = chrono::steady_clock::now();
 			return;//Gå tillbaka till spelet
-		case '2': 
+		case 2: 
 			game.bag.push_back(game.fallingBlock.color);
 			saveGame(game); //Sparar spelet
 			cout << "\033[8;22HSAVING";
 			Sleep(1000);
 			quit = true;
 			return;
-		case '3': 
+		case 3: 
 			gameover = true; //Avslutar spelet
 			return;
 
@@ -707,9 +744,9 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 			if (!moveTetromino(game.fallingBlock, 0, 1, game.gameboard))
 				//Om det inte går att flytta ska blocket läggas på brädet
 				placeTetromino(game, gameover, hasHeldBlock);
-			//Gamescore ökar med 1 om det föll naturligt eller 2 om spelaren fast droppade det manuellt
+			//Gamescore ökar med 1 om det föll naturligt eller 2 om spelaren soft droppade det manuellt
 			game.score += (fallingDelay == 10) ? 2 : 1;
-			//Sätter att senast blocket föll var nu
+			//Sätter att nu var senaste gången blocket föll
 			lastTime = chrono::steady_clock::now();
 		}
 		//Skapar ett förutspått shadow block som visar var det fallande blocket hamnar om man skickar ner det
@@ -779,7 +816,7 @@ void loadGame(GameStatistics& newGame) {
 //Startmeny med leaderboard och olika val
 bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& leaderboard) {
 	//Återställer text färger och visar musmarkör
-	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[SHOW_CURSOR];
+	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[HIDE_CURSOR];
 	
 	bool redo;
 	//Så länge användaren skriver fel input loopas det
@@ -788,14 +825,14 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 		//Visar leaderboarden
 		cout << "HIGHSCORES\n\n";
 		readLeaderboard(leaderboard);
-		//Skriver ut valen användaren har
-		cout << "\n[1]START NEW GAME\n[2]LOAD GAME\n[3]QUIT";
 		redo = false;
-		switch (_getch()) {
-		case '1': //Start new game
-			cout << "\n\nThe new game will overwrite the current saved game\nAre you sure you want to continue?\n\n[1]YES\n[2]NO";
-			switch (_getch()) {
-			case '1':
+		vector<string> menuText = { "[1]START NEW GAME" , "[2]LOAD GAME" , "[3]QUIT" };
+		switch (menuChoice(3, 0, 14, menuText)) {
+		case 1: //Start new game
+			cout << "\n\nThe new game will overwrite the current saved game\nAre you sure you want to continue?";
+			menuText = { "[1]YES" , "[2]NO"};
+			switch (menuChoice(2, 0, 20, menuText)) {
+			case 1:
 				break;
 			default:
 				redo = true;
@@ -804,6 +841,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			if (redo) break;
 
 			//Ber användaren välja startlevel
+			cout << ANSI_CODES[SHOW_CURSOR];
 			cout << "\nChoose starting level(0-19): ";
 			//Loopar tills användare valj giltig level att starta på
 			do {
@@ -813,13 +851,13 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			//Sätter gameloaded till false eftersom det är nytt spel
 			gameLoaded = false;
 			return true;
-		case '2':
+		case 2:
 			//Initialiserar startvärden till de sparade spelet värden
 			loadGame(newGame);
 			//Sätter att game blivit loadat
 			gameLoaded = true;
 			return true;
-		case '3': //QUIT
+		case 3: //QUIT
 			//Returnerar så run blir false
 			return false;
 		default:

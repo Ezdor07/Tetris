@@ -1,41 +1,41 @@
 Sammanfattning
-    Tetris är ett spel som använder sig av enkla former, så kallade Tetriminos, 
-    och lätta kontroller. Det faller en tetrimino åt gången från toppen av spelplanen
-    som man kan styra både position och rotation på. Målet är överleva så länge som möjligt 
-    genom att skapa fulla rader på spelplanen med tetriminosarna. Då försvinner raden och 
-    ovanliggande tetriminos åker ner och man får poäng. 
+    Tetris ï¿½r ett spel som anvï¿½nder sig av enkla former, sï¿½ kallade Tetriminos, 
+    och lï¿½tta kontroller. Det faller en tetrimino ï¿½t gï¿½ngen frï¿½n toppen av spelplanen
+    som man kan styra bï¿½de position och rotation pï¿½. Mï¿½let ï¿½r ï¿½verleva sï¿½ lï¿½nge som mï¿½jligt 
+    genom att skapa fulla rader pï¿½ spelplanen med tetriminosarna. Dï¿½ fï¿½rsvinner raden och 
+    ovanliggande tetriminos ï¿½ker ner och man fï¿½r poï¿½ng. 
 
 Bakgrund
-    Tetris är ett av de första tv-spelen som skapades och har varit populärt sedan dess
-    Jag valde att göra programmet för att själv utmana mina kunskaper. Det kräver att man 
-    hittar smidiga lösningar för att hantera bland annat spel uppdatering, inputs och 
-    kollision på ett bra sätt. 
+    Tetris ï¿½r ett av de fï¿½rsta tv-spelen som skapades och har varit populï¿½rt sedan dess
+    Jag valde att gï¿½ra programmet fï¿½r att sjï¿½lv utmana mina kunskaper. Det krï¿½ver att man 
+    hittar smidiga lï¿½sningar fï¿½r att hantera bland annat spel uppdatering, inputs och 
+    kollision pï¿½ ett bra sï¿½tt. 
 
-Hur används programmet?
-    För att använda spelet startar man programmet. Viktigt att hela spelrutan syns i 
-    terminalen när man startar. Gör terminalen så stor som möjligt. Det börjar därefter 
-    falla ett block från toppen som man kan styra på olika sätt. 
+Hur anvï¿½nds programmet?
+    Fï¿½r att anvï¿½nda spelet startar man programmet. Viktigt att hela spelrutan syns i 
+    terminalen nï¿½r man startar. Gï¿½r terminalen sï¿½ stor som mï¿½jligt. Det bï¿½rjar dï¿½refter 
+    falla ett block frï¿½n toppen som man kan styra pï¿½ olika sï¿½tt. 
 
     Kontroller:
-        Flytta tetrimino höger - Piltangent höger(>)
-        Flytta tetrimino vänster - Piltangent vänster(<)
+        Flytta tetrimino hï¿½ger - Piltangent hï¿½ger(>)
+        Flytta tetrimino vï¿½nster - Piltangent vï¿½nster(<)
         Rotera tetriminon - Piltangent upp(^)
-        Skynda på fallet - Piltangent ner(v)
+        Skynda pï¿½ fallet - Piltangent ner(v)
         Skicka ner tetromino till botten - Mellanslag
-        Håll nuvarnade tetrimino - w eller W
+        Hï¿½ll nuvarnade tetrimino - w eller W
         Pausa spelet - p
         
-    För att ladda om grafiken kan man pausa och starta igen
+    Fï¿½r att ladda om grafiken kan man pausa och starta igen
     
 Utmaningar
-    Bättre visuals
+    Bï¿½ttre visuals
     Scoring system, t spins
-    Delay på inputs om man vill hålla in
+    Delay pï¿½ inputs om man vill hï¿½lla in
     Rotationer inte samma som vanliga tetris
-    Namn på leaderboard
-    Flera savefiles och inte behöva skriva över savefile
-    Svårnavigerad meny med sifferinputs
-    Någon random bug när det blir panik
+    Namn pï¿½ leaderboard
+    Flera savefiles och inte behï¿½va skriva ï¿½ver savefile
+    Svï¿½rnavigerad meny med sifferinputs
+    Nï¿½gon random bug nï¿½r det blir panik
 
-Vad härnäst?
+Vad hï¿½rnï¿½st?
 
