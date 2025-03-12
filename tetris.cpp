@@ -73,6 +73,7 @@ enum Input {
 	ARROW_LEFT = 75,
 	ARROW_RIGHT = 77,
 	SPACEBAR = 32,
+	ENTER = 13
 };
 
 struct Board {
@@ -539,10 +540,8 @@ int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
 		case ARROW_DOWN:
 			if (playerChoice < optionsCount) playerChoice++;
 			break;
-		case 13:
+		case ENTER:
 			redo = false;
-			break;
-		default:
 			break;
 		}
 	} while (redo);
