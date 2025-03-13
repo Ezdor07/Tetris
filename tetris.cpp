@@ -133,6 +133,7 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	//Öppnar leaderboard filen
 	ofstream leaderboardScore("highscores.txt");
+	//ofstream leaderboardName("names.txt");
 	//Kollar så att den lyckades öppna
 	if (!leaderboardScore) {
 		cout << "Could not write to the file\n";
@@ -145,23 +146,24 @@ void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	for (int i = 0; i < leaderboard.size(); i++) {
 		//Kollar om spelarens score är bättre än något av listans och att score inte redan skrivit. I så fall skrivs score före
 		if (gameScore > leaderboard[i].score && !hasEntered) {
-			newLeaderboard.push_back({ gameScore , "Name"});
+			newLeaderboard.push_back({ gameScore , "First Last"});
 			hasEntered = true;
 			//Går tillbaka ett index i scores för att lägga in den nerflyttade scoren också. Annars hoppas den över
 			i--;
-		}
-		else newLeaderboard.push_back({ leaderboard[i].score, "Name"});
+		}	
+		else newLeaderboard.push_back({ leaderboard[i].score, "First Last"});
 	}
 	//Om storleken för den nya leaderboaren är mer än 10 så tar den bort sista elementet
 	if (newLeaderboard.size() > 10) newLeaderboard.pop_back();
 	//Skriver varje score på leaderboard till txt filen
 	for (Leaderboard placement : newLeaderboard) {
-		leaderboardScore << placement.score << endl;
+		leaderboardScore << placement.score << '\n';
+		//leaderboardName << placement.name << '\n';
 	}
-
 
 	//Stänger filerna
 	leaderboardScore.close();
+	//leaderboardName.close();
 }
 
 //Ritar vald rad av en tetromino. För hold och next block
