@@ -135,8 +135,8 @@
     <Text Include="gameboard state.txt" />
     <Text Include="held block.txt" />
     <Text Include="highscores.txt" />
+    <Text Include="leaderboardNames.txt" />
     <Text Include="lines cleared.txt" />
-    <Text Include="names.txt" />
     <Text Include="README.txt" />
     <Text Include="score.txt" />
   </ItemGroup>

@@ -665,7 +665,7 @@ void clearedLinesAnimation(vector<int> fullLines) {
 }
 
 //Tar bort rader som är fulla
-void clearLines(GameStatistics& game, int& lastClear) {
+void clearLines(GameStatistics& game) {
 	//vector som sparar index för de rader som är fulla
 	vector<int> fullLines;
 	//Loopar genom brädet
@@ -703,12 +703,11 @@ void clearLines(GameStatistics& game, int& lastClear) {
 		break;
 	case 4:
 		//Om det är 2 clears i rad så ökar det med 1800 annars 1200
-		game.score += (lastClear == 4) ? int(1800 * (game.level + 1)) : int(1200 * (game.level + 1));
+		game.score += 1200 * (game.level + 1);
 		break;
 	}
 	//Ökar totala lines cleared
 	game.linesCleared += (int)fullLines.size();
-	lastClear = (int)fullLines.size();
 	//Om linesCleared är mer än 10x leveln + 1, så ökar leveln
 	if (game.linesCleared > (game.level + 1) * 10) game.level++;
 }
@@ -724,7 +723,6 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	bool quit = false;
 	int fallingDelay;
 	bool hasHeldBlock = false;
-	int lastClear = 0;
 
 	spawnNewBlock(game);
 	Block predictedBlock = predictBlock(game);
@@ -755,7 +753,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 		//Ritar upp brädet
 		drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
 		//Tar bort lines om det finns några fulla
-		clearLines(game, lastClear);
+		clearLines(game);
 	}
 	//När spelet är över kollar den om det är över pga gameover eller quit
 	if (quit) return; //Om quit kommer man till meny direkt
@@ -827,11 +825,11 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 		cout << "HIGHSCORES\n\n";
 		readLeaderboard(leaderboard);
 		redo = false;
-		vector<string> menuText = { "[1]START NEW GAME" , "[2]LOAD GAME" , "[3]QUIT" };
+		vector<string> menuText = { "START NEW GAME" , "LOAD GAME" , "QUIT" };
 		switch (menuChoice(3, 0, 14, menuText)) {
 		case 1: //Start new game
 			cout << "\n\nThe new game will overwrite the current saved game\nAre you sure you want to continue?";
-			menuText = { "[1]YES" , "[2]NO"};
+			menuText = { "YES" , "NO"};
 			switch (menuChoice(2, 0, 20, menuText)) {
 			case 1:
 				break;
@@ -852,7 +850,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			//Sätter gameloaded till false eftersom det är nytt spel
 			gameLoaded = false;
 			return true;
-		case 2:
+		case 2: //LOAD GAME
 			//Initialiserar startvärden till de sparade spelet värden
 			loadGame(newGame);
 			//Sätter att game blivit loadat
