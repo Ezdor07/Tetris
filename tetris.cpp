@@ -288,7 +288,7 @@ bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
 	//Loopar genom varje position i blocket
 	for (auto position : tetromino.positions)
 		//Om positionen är på brädet
-		if (position.x >= 0 && position.x <= WIDTH - 1 && position.y >= 0 && position.y <= HEIGHT - 1) {
+		if (position.x >= 0 && position.x < WIDTH && position.y >= 0 && position.y < HEIGHT) {
 			//Kollar om det ligger en tetromino på den positionen
 			if (gameboard[position.y][position.x].state == 1)
 				return true; //I så fall returner true
@@ -303,7 +303,7 @@ bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
 //Flyttar en tetromino åt olika håll
 bool moveTetromino(Block& tetromino, int delta_x, int delta_y, Board gameboard[HEIGHT][WIDTH]) {
 	//Variabel för den nya positonen
-	Block newPosition;
+	Block newPosition = {};
 	//Loopar genom varje position
 	for (int i = 0; i < 4; i++) {
 		//newPosition får gamla positionen + delta_x/y
@@ -325,7 +325,7 @@ void rotateTetromino(GameStatistics& game) {
 	if (game.fallingBlock.color == YELLOW) return;
 	
 	//Variabel för hur den nya blocket kommer ligga
-	Block newBlock;
+	Block newBlock = {};
 
 	//Sätter position 0 i blocket som referens
 	Position reference = game.fallingBlock.positions[0];
@@ -359,7 +359,7 @@ void rotateTetromino(GameStatistics& game) {
 
 //Fyller bag med de 7 formerna i random ordning
 void fillBag(vector<int>& bag) {
-	//Loopar tills bag.size() = 7
+	//Loopar tills bagen har alla former
 	while (bag.size() != 7) {
 		int randomShape = rand() % 7; //Väljer ett random tal 0-6 som representerar en tetromino
 		bool alreadyInBag = false; 
@@ -373,7 +373,7 @@ void fillBag(vector<int>& bag) {
 //Ger fallingBlock startposition och random form/färg
 void spawnNewBlock(GameStatistics& game) {
 	//Hittar sista värdet i bag och sparar det
-	char nextShape = game.bag[game.bag.size() - 1];
+	int nextShape = game.bag[game.bag.size() - 1];
 	game.bag.pop_back();//Tar bort sista elementet
 	//Kollar vilken form som är nästa och anger start position och färg till fallingBlock. 
 	switch (nextShape) {
@@ -473,7 +473,7 @@ void saveGame(const GameStatistics& game) {
 	savedBag.close();
 
 	ofstream savedLevel("level.txt");
-	savedLevel <<game.level;
+	savedLevel << game.level;
 	savedLevel.close();
 
 	ofstream savedScore("score.txt");
@@ -515,10 +515,12 @@ void initializeGame(GameStatistics& game) {
 }
 
 void countDown() {
+	//Skriver ut 3-2-1 i mitten av brädet med 500ms delay
 	for (int i = 3; i > 0; i--) {
 		cout << "\033[12;25H" << i;
 		Sleep(500);
 	}
+	//Tömmer input buffer så att användare inte kan göra inputs under nedräkning
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
 
@@ -562,7 +564,7 @@ void pauseMenu(bool& quit, bool& gameover, GameStatistics game, chrono::steady_c
 
 		redo = false;
 		//vector för de olika menyvalen
-		vector<string> menuText = { "[1]CONTINUE", "[2]SAVE AND QUIT", "[3]QUIT" };
+		vector<string> menuText = { "CONTINUE", "SAVE AND QUIT", "QUIT" };
 		switch (menuChoice(3, 19, 11, menuText)) {
 		case 1: 
 			//Skriver över meny texten
@@ -593,10 +595,8 @@ void pauseMenu(bool& quit, bool& gameover, GameStatistics game, chrono::steady_c
 
 //Hanterar spelarens inputs
 void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, bool& gameover, chrono::steady_clock::time_point& lastTime, bool& quit) {
-	//int key = 0;
 	//Kollar om ett knapp blivit nertryckt
 	if (_kbhit()) {
-		//key = _getch();
 		//Kollar vilken knapp det är
 		switch (_getch()) {
 		case ARROW_UP: //Om pil upp rotera medurs
@@ -702,7 +702,6 @@ void clearLines(GameStatistics& game) {
 		game.score += 300 * (game.level + 1);
 		break;
 	case 4:
-		//Om det är 2 clears i rad så ökar det med 1800 annars 1200
 		game.score += 1200 * (game.level + 1);
 		break;
 	}
@@ -727,7 +726,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	spawnNewBlock(game);
 	Block predictedBlock = predictBlock(game);
 	drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
-	//Räknar ner från 3 innan det startar igen
+	//Räknar ner från 3 innan det startar
 	countDown();
 	auto lastTime = chrono::steady_clock::now();
 	//Spelloop som körs så länge som det inte är gameover eller spelaren har valt quit från menyn
@@ -796,7 +795,7 @@ void loadGame(GameStatistics& newGame) {
 
 	ifstream savedHeldBlock("held block.txt");
 	savedHeldBlock >> newGame.heldBlock;
-	savedScore.close();
+	savedHeldBlock.close();
 
 	ifstream savedLinesCleared("lines cleared.txt");
 	savedLinesCleared >> newGame.linesCleared;
@@ -875,7 +874,7 @@ int main() {
 	while (run) {
 		GameStatistics newGame = {};
 		initializeGame(newGame);
-		vector <Leaderboard> leaderboard;
+		vector <Leaderboard> leaderboard = {};
 		bool gameLoaded, gameover = false;
 		
 		//Går till startmenyn för att välja hur man vill starta spelet
