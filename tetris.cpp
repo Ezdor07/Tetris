@@ -13,7 +13,7 @@ using namespace std;
 
 //Structs och konstanter för att göra koden mer läsvänlig
 
-const string ANSI_CODES[]{
+const string ANSI_CODES[] = {
 	"\033[43m",
 	"\033[46m",
 	"\033[48;5;166m", //ORANGE
@@ -114,62 +114,74 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 	leaderboard.clear();
 	//Öppnar leaderboard txt filerna
 	ifstream leaderboardScores("highscores.txt");
+	ifstream leaderboardNames("names.txt");
 	//Kollar om de gick att öppna
-	if (!leaderboardScores) {
+	if (!leaderboardScores || !leaderboardNames) {
 		cout << "Could not read the file";
 		return;
 	}
 	//Hämtar varje rad i filen och lägger värdet på raden i leaderboard vectorn
-	string scoreStr;
+	string scoreStr = "";
 	while (getline(leaderboardScores, scoreStr)) leaderboard.push_back({ stoi(scoreStr), ""});
 	//Stänger filen
 	leaderboardScores.close();
 
+	string fileName = "";
+	int i = 0;
+	while (getline(leaderboardNames, fileName)) leaderboard[i++].name = fileName;
+	//Stänger filen
+	leaderboardNames.close();
+
 	//Skriver ut topplistan
-	for (int i = 0; i < leaderboard.size(); i++) cout << i + 1 << ". " << leaderboard[i].score << '\n';
+	for (int i = 0; i < leaderboard.size(); i++) {
+		cout << i + 1 << ". " << leaderboard[i].score << " by " << leaderboard[i].name << '\n';
+	}
 }
 
 //Funktion för att skriva highscore till leaderboard
 void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	//Öppnar leaderboard filen
 	ofstream leaderboardScore("highscores.txt");
-	//ofstream leaderboardName("names.txt");
+	ofstream leaderboardName("names.txt");
 	//Kollar så att den lyckades öppna
-	if (!leaderboardScore) {
+	if (!leaderboardScore || !leaderboardName) {
 		cout << "Could not write to the file\n";
 		return;
 	}
 	//Vector för de olika nya scoresen i leaderboard
-	vector <Leaderboard> newLeaderboard;
+	vector <Leaderboard> newLeaderboard = {};
 	bool hasEntered = false;
 	//Loopar genom varje score som lästes innan spelet
 	for (int i = 0; i < leaderboard.size(); i++) {
 		//Kollar om spelarens score är bättre än något av listans och att score inte redan skrivit. I så fall skrivs score före
 		if (gameScore > leaderboard[i].score && !hasEntered) {
-			newLeaderboard.push_back({ gameScore , "First Last"});
+			cout << "ENTER YOUR NAME: ";
+			string userName = "";
+			getline(cin, userName);
+			newLeaderboard.push_back({ gameScore , userName});
 			hasEntered = true;
 			//Går tillbaka ett index i scores för att lägga in den nerflyttade scoren också. Annars hoppas den över
 			i--;
 		}	
-		else newLeaderboard.push_back({ leaderboard[i].score, "First Last"});
+		else newLeaderboard.push_back({ leaderboard[i].score, leaderboard[i].name});
 	}
 	//Om storleken för den nya leaderboaren är mer än 10 så tar den bort sista elementet
 	if (newLeaderboard.size() > 10) newLeaderboard.pop_back();
 	//Skriver varje score på leaderboard till txt filen
 	for (Leaderboard placement : newLeaderboard) {
 		leaderboardScore << placement.score << '\n';
-		//leaderboardName << placement.name << '\n';
+		leaderboardName << placement.name << '\n';
 	}
 
 	//Stänger filerna
 	leaderboardScore.close();
-	//leaderboardName.close();
+	leaderboardName.close();
 }
 
 //Ritar vald rad av en tetromino. För hold och next block
 void drawTetromino(int block, int row) {
 	//Array för de 2 raderna i blocken
-	string output[2];
+	string output[2] = {};
 	//Kollar vilket block det är
 	switch (block) {
 		//Output får båda raderna tilldelade
@@ -293,7 +305,7 @@ bool isCollision(const Block& tetromino, const Board gameboard[HEIGHT][WIDTH]) {
 			if (gameboard[position.y][position.x].state == 1)
 				return true; //I så fall returner true
 		}
-		//Annar om positionen är utanför brädet höger/vänster/ner så är det också kollision(uppåt får den vara)
+		//Annars om positionen är utanför brädet höger/vänster/ner så är det också kollision(uppåt får den vara)
 		else if (position.x < 0 || position.x >= WIDTH || position.y >= HEIGHT) {
 			return true;
 		}
@@ -443,9 +455,12 @@ void holdBlock(GameStatistics& game) {
 //Lägger det fallande blocket på brädet
 void placeTetromino(GameStatistics& game, bool& gameover, bool& hasHeldBlock) {
 	//Loopar genom alla positioner för det fallande blocker
-	for (int i = 0; i < 4; i++)
-		//Sätter gamestate på den platsen till 1 och färgen till fallande blocket färg
-		game.gameboard[game.fallingBlock.positions[i].y][game.fallingBlock.positions[i].x] = { 1, game.fallingBlock.color };
+	for (int i = 0; i < 4; i++) {
+		//Kollar så att man inte accessar array out of range
+		if(game.fallingBlock.positions[i].y >= 0 && game.fallingBlock.positions[i].y < HEIGHT && game.fallingBlock.positions[i].x >= 0 && game.fallingBlock.positions[i].x < WIDTH)
+			//Sätter gamestate på den platsen till 1 och färgen till fallande blocket färg
+			game.gameboard[game.fallingBlock.positions[i].y][game.fallingBlock.positions[i].x] = { 1, game.fallingBlock.color };
+	}
 
 	//Spawnar nytt block
 	spawnNewBlock(game);
@@ -526,7 +541,7 @@ void countDown() {
 
 int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
 	int playerChoice = 1;
-	bool redo;
+	bool redo = true;
 	do {
 		//Skriver ut valen användaren har
 		for (int i = 0; i < optionsCount; i++) { //Loopar så många gånger som det finns options
@@ -556,7 +571,7 @@ int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
 
 //Meny när man pausar med olika menyval
 void pauseMenu(bool& quit, bool& gameover, GameStatistics game, chrono::steady_clock::time_point& lastTime) {
-	bool redo;
+	bool redo = false;
 	//Loopar tills användaren lämnar menyn
 	do {
 		//Visar att spelet är pausat mitt på skärmen
@@ -667,7 +682,7 @@ void clearedLinesAnimation(vector<int> fullLines) {
 //Tar bort rader som är fulla
 void clearLines(GameStatistics& game) {
 	//vector som sparar index för de rader som är fulla
-	vector<int> fullLines;
+	vector<int> fullLines = {};
 	//Loopar genom brädet
 	for (int y = 0; y < HEIGHT; y++) {
 		bool isFullLine = true;
@@ -720,7 +735,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	//Standard variabler varje spel
 	
 	bool quit = false;
-	int fallingDelay;
+	int fallingDelay = fallingDelays[0];
 	bool hasHeldBlock = false;
 
 	spawnNewBlock(game);
@@ -766,7 +781,7 @@ void loadGame(GameStatistics& newGame) {
 	ifstream gameboardState("gameboard state.txt");
 	ifstream gameboardColor("gameboard color.txt");
 	int rowIndex = 0;
-	string row;
+	string row = "";
 	//För varje rad i filen hämtas varje karaktär i raden som översätts till siffra och tilldelas gameboard
 	while (getline(gameboardState, row)) {
 		int columnIndex = 0;
@@ -803,7 +818,7 @@ void loadGame(GameStatistics& newGame) {
 
 	//läser raden och tar varje siffra i raden och lägger i bagen
 	ifstream savedBag("bag.txt");
-	string numbers;
+	string numbers = "";
 	getline(savedBag, numbers);
 
 	for (char number : numbers) newGame.bag.push_back(number - '0');
@@ -816,7 +831,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 	//Återställer text färger och visar musmarkör
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[HIDE_CURSOR];
 	
-	bool redo;
+	bool redo = false;
 	//Så länge användaren skriver fel input loopas det
 	do {
 		system("cls");
@@ -844,7 +859,9 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			//Loopar tills användare valj giltig level att starta på
 			do {
 				cin >> newGame.level;
+				cin.ignore();
 				if (!(newGame.level >= 0 && newGame.level <= 19)) cout << "Try again!\n";
+
 			} while (!(newGame.level >= 0 && newGame.level <= 19));
 			//Sätter gameloaded till false eftersom det är nytt spel
 			gameLoaded = false;
@@ -875,7 +892,7 @@ int main() {
 		GameStatistics newGame = {};
 		initializeGame(newGame);
 		vector <Leaderboard> leaderboard = {};
-		bool gameLoaded, gameover = false;
+		bool gameLoaded = false, gameover = false;
 		
 		//Går till startmenyn för att välja hur man vill starta spelet
 		run = startMenu(newGame, gameLoaded, leaderboard);
@@ -884,7 +901,7 @@ int main() {
 		if(run) tetris(newGame, gameLoaded, gameover);
 		//Om det blivit gameover ska scoret läggas in på leaderboard om det är bättre än 10an
 		if (gameover) {
-			if (newGame.score > leaderboard[leaderboard.size()-1].score)
+			if (newGame.score > leaderboard[leaderboard.size() - 1].score)
 				writeHighscore(newGame.score, leaderboard);
 			//Spara ett tomt spel så att den gamla sparfilen inte ligger kvar
 			initializeGame(newGame);
