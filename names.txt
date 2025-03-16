@@ -1,10 +1,10 @@
 1
+New Game highscore
 2
 3
 Ludvig Nilsson
+Saved Game Highscore
 Ludvig Nilsson
-    Namn leaderboard funkar nu men vi har fortfarande att minnet ballar ur
-  Sup bro
-
- Ludvig Herr Nilsson Bollar
-Ludvig Nilsson
+Test med buffer och det funkar
+Saved game highscore
+Försöker paja minnet nu

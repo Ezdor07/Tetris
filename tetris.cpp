@@ -155,8 +155,9 @@ void writeHighscore(int gameScore, vector<Leaderboard> leaderboard) {
 	for (int i = 0; i < leaderboard.size(); i++) {
 		//Kollar om spelarens score är bättre än något av listans och att score inte redan skrivit. I så fall skrivs score före
 		if (gameScore > leaderboard[i].score && !hasEntered) {
-			cout << "ENTER YOUR NAME: ";
+			cout << ANSI_CODES[SHOW_CURSOR] << "\033[25;10HENTER YOUR NAME: ";
 			string userName = "";
+			FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 			getline(cin, userName);
 			newLeaderboard.push_back({ gameScore , userName});
 			hasEntered = true;
