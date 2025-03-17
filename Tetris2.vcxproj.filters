@@ -26,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="highscores.txt">
-      <Filter>Resource Files\Leaderboard</Filter>
-    </Text>
     <Text Include="score.txt">
       <Filter>Resource Files\Saved Game</Filter>
     </Text>
@@ -48,7 +45,10 @@
       <Filter>Resource Files\Saved Game</Filter>
     </Text>
     <Text Include="README.txt" />
-    <Text Include="leaderboardNames.txt">
+    <Text Include="highscores.txt">
+      <Filter>Resource Files\Leaderboard</Filter>
+    </Text>
+    <Text Include="names.txt">
       <Filter>Resource Files\Leaderboard</Filter>
     </Text>
   </ItemGroup>
