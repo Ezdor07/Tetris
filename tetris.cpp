@@ -888,7 +888,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 
 int main() {
 	srand((int)time(0));
-	setlocale(LC_ALL, "sv_SE.UTF-8");
+	//setlocale(LC_ALL, "sv_SE.UTF-8");
 	bool run = true;
 	//Main loop som gör att man kommer tillbaka till meny när spelet är över
 	while (run) {
