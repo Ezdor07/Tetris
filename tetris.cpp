@@ -557,9 +557,11 @@ int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
 		switch (_getch()) {
 		case ARROW_UP:
 			if (playerChoice > 1) playerChoice--;
+			else playerChoice = optionsCount;
 			break;
 		case ARROW_DOWN:
 			if (playerChoice < optionsCount) playerChoice++;
+			else playerChoice = 1;
 			break;
 		case ENTER:
 			redo = false;
