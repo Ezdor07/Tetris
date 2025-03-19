@@ -828,7 +828,6 @@ void loadGame(GameStatistics& newGame) {
 	for (char number : numbers) newGame.bag.push_back(number - '0');
 
 	savedBag.close();
-	newGame.bag.back();
 }
 
 //Startmeny med leaderboard och olika val
