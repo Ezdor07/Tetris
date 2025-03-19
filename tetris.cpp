@@ -387,7 +387,7 @@ void fillBag(vector<int>& bag) {
 //Ger fallingBlock startposition och random form/färg
 void spawnNewBlock(GameStatistics& game) {
 	//Hittar sista värdet i bag och sparar det
-	int nextShape = game.bag[game.bag.size() - 1];
+	int nextShape = game.bag.back();
 	game.bag.pop_back();//Tar bort sista elementet
 	//Kollar vilken form som är nästa och anger start position och färg till fallingBlock. 
 	switch (nextShape) {
@@ -744,7 +744,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 
 	spawnNewBlock(game);
 	Block predictedBlock = predictBlock(game);
-	drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
+	drawBoard(game, predictedBlock, game.bag.back());
 	//Räknar ner från 3 innan det startar
 	countDown();
 	auto lastTime = chrono::steady_clock::now();
@@ -769,7 +769,7 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 		//Skapar ett förutspått shadow block som visar var det fallande blocket hamnar om man skickar ner det
 		predictedBlock = predictBlock(game);
 		//Ritar upp brädet
-		drawBoard(game, predictedBlock, game.bag[game.bag.size() - 1]);
+		drawBoard(game, predictedBlock, game.bag.back());
 		//Tar bort lines om det finns några fulla
 		clearLines(game);
 	}
@@ -828,6 +828,7 @@ void loadGame(GameStatistics& newGame) {
 	for (char number : numbers) newGame.bag.push_back(number - '0');
 
 	savedBag.close();
+	newGame.bag.back();
 }
 
 //Startmeny med leaderboard och olika val
@@ -906,7 +907,7 @@ int main() {
 		if(run) tetris(newGame, gameLoaded, gameover);
 		//Om det blivit gameover ska scoret läggas in på leaderboard om det är bättre än 10an
 		if (gameover) {
-			if (newGame.score > leaderboard[leaderboard.size() - 1].score)
+			if (newGame.score > leaderboard.back().score)
 				writeHighscore(newGame.score, leaderboard);
 			//Spara ett tomt spel så att den gamla sparfilen inte ligger kvar
 			initializeGame(newGame);
