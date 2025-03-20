@@ -909,8 +909,10 @@ int main() {
 			if (newGame.score > leaderboard.back().score)
 				writeHighscore(newGame.score, leaderboard);
 			//Spara ett tomt spel så att den gamla sparfilen inte ligger kvar
-			initializeGame(newGame);
-			saveGame(newGame);
+			if (gameLoaded) {
+				initializeGame(newGame);
+				saveGame(newGame);
+			}
 		}
 	}
 	return 0;
