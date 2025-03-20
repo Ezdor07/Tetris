@@ -363,7 +363,7 @@ void rotateTetromino(GameStatistics& game) {
 			if (moveTetromino(newBlock, moveOrder[i], delta_y, game.gameboard)) 
 				break;
 		}
-		//Nästa loop så öka delta y med 1 och samma delta x testas
+		//Nästa loop så öka delta y med 1 men samma delta x testas
 		delta_y--;
 	}
 	//Om en giltig posiiton hittades tillräckligt nära tilldelas fallingBlock newBlocks positioner
@@ -846,17 +846,6 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 		vector<string> menuText = { "START NEW GAME" , "LOAD GAME" , "QUIT" };
 		switch (menuChoice(3, 0, 14, menuText)) {
 		case 1: //Start new game
-			cout << "\n\nThe new game will overwrite the current saved game\nAre you sure you want to continue?";
-			menuText = { "YES" , "NO"};
-			switch (menuChoice(2, 0, 20, menuText)) {
-			case 1:
-				break;
-			default:
-				redo = true;
-				break;
-			}
-			if (redo) break;
-
 			//Ber användaren välja startlevel
 			cout << ANSI_CODES[SHOW_CURSOR];
 			cout << "\nChoose starting level(0-19): ";

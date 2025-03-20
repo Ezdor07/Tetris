@@ -137,8 +137,10 @@
     <Text Include="highscores.txt" />
     <Text Include="lines cleared.txt" />
     <Text Include="names.txt" />
-    <Text Include="README.txt" />
     <Text Include="score.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
