@@ -859,8 +859,18 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			//Sätter gameloaded till false eftersom det är nytt spel
 			gameLoaded = false;
 			return true;
-		case 2: //LOAD GAME
+		case 2: {//LOAD GAME
 			//Initialiserar startvärden till de sparade spelet värden
+			ifstream savedScoreFile("score.txt");
+			int savedScore;
+			savedScoreFile >> savedScore;
+			if (savedScore == 0) {
+				cout << "\033[33m\n\nThere is no saved game" << ANSI_CODES[DEFAULT];
+				Sleep(1000);
+				redo = true;
+				break;
+			}
+		}
 			loadGame(newGame);
 			//Sätter att game blivit loadat
 			gameLoaded = true;
