@@ -26,6 +26,7 @@ const string ANSI_CODES[] = {
 	"\033[100m",
 	"\033[48;5;235m",
 	"\033[47m",
+	"\033[48;5;123m",
 	"\033[30m",
 	"\033[H",
 	"\033[?25l",
@@ -62,6 +63,7 @@ enum AnsiCodeIndexes {
 	GRAY,
 	DARK_GRAY,
 	WHITE,
+	LIGHT_BLUE,
 	BLACK_TEXT,
 	RESET_CURSOR,
 	HIDE_CURSOR,
@@ -668,7 +670,7 @@ void clearedLinesAnimation(vector<int> fullLines) {
 		//loopar genom varje rad
 		for (int lineIndex : fullLines) {
 			//Skriver ut en ljusblå remsa över raden
-			cout << "\033[48;5;123m" << "\033[" << lineIndex + 3 << ";" << 15 << "H";
+			cout << ANSI_CODES[LIGHT_BLUE] << "\033[" << lineIndex + 3 << ";" << 15 << "H";
 			for (int i = 0; i < 10; i++) cout << SQUARE;
 		}
 		//Vänta 75 ms och ta bort den ljusblå remsan
@@ -830,6 +832,45 @@ void loadGame(GameStatistics& newGame) {
 	savedBag.close();
 }
 
+
+//Ritar ut ett exempel på hur man ska spela
+void drawExample() {
+	//Översta raden
+	cout << SQUARE + SQUARE << ANSI_CODES[PURPLE] << SQUARE + SQUARE + SQUARE << ANSI_CODES[DEFAULT] << '\n';
+
+	//Andra raden
+	cout << ANSI_CODES[BLUE] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE + SQUARE << ANSI_CODES[PURPLE] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE << ANSI_CODES[RED] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE + SQUARE + SQUARE;
+	cout << "--->" << SQUARE + SQUARE << ANSI_CODES[BLUE] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE << ANSI_CODES[PURPLE] << SQUARE + SQUARE + SQUARE << ANSI_CODES[RED] << SQUARE;
+	cout << ANSI_CODES[DEFAULT] << SQUARE + SQUARE + SQUARE << "--->" << '\n';
+
+	//Tredje raden
+	cout << ANSI_CODES[BLUE] << SQUARE + SQUARE + SQUARE << ANSI_CODES[DEFAULT] << SQUARE << ANSI_CODES[RED] << SQUARE + SQUARE << ANSI_CODES[GREEN] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE + SQUARE + SQUARE + SQUARE + SQUARE + SQUARE;
+	cout << ANSI_CODES[LIGHT_BLUE] << SQUARE + SQUARE + SQUARE + SQUARE + SQUARE + SQUARE + SQUARE << ANSI_CODES[DEFAULT] << SQUARE + SQUARE + SQUARE + SQUARE + SQUARE + SQUARE;
+	cout << ANSI_CODES[BLUE] << SQUARE << ANSI_CODES[DEFAULT] << SQUARE << ANSI_CODES[PURPLE] << SQUARE + SQUARE + SQUARE << ANSI_CODES[RED] << SQUARE << ANSI_CODES[DEFAULT] << "\n\n";
+}
+
+void howToPlayScreen() {
+	system("cls");
+	cout << "INSTRUCTIONS\n\n";
+	cout << "The goal of the game is to move and rotate the falling tetromino\n";
+	cout << "to make full horizontal rows on the board that is then cleared.\n";
+	cout << "The more rows you clear at the same time the more score you are awarded.\n";
+	cout << "The level, aswell as the score and speed of the game,\n";
+	cout << "increases for every 10 lines cleared.\n\n";
+	cout << "KEYBINDS\n\n";
+	cout << "Move left - Arrowkey left\n";
+	cout << "Move right - Arrowkey right\n";
+	cout << "Rotate clockwise - Arrowkey up\n";
+	cout << "Softdrop - Arrowkey down\n";
+	cout << "Harddrop - Spacebar\n";
+	cout << "Hold tetromino - W/w\n";
+	cout << "Pause game - p\n\n";
+	drawExample();
+	cout << "Press any button to return";
+	char wait = _getch();
+	system("cls");
+}
+
 //Startmeny med leaderboard och olika val
 bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& leaderboard) {
 	//Återställer text färger och visar musmarkör
@@ -843,8 +884,8 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 		cout << "HIGHSCORES\n\n";
 		readLeaderboard(leaderboard);
 		redo = false;
-		vector<string> menuText = { "START NEW GAME" , "LOAD GAME" , "QUIT" };
-		switch (menuChoice(3, 0, 14, menuText)) {
+		vector<string> menuText = { "START NEW GAME" , "LOAD GAME", "HOW TO PLAY", "QUIT"};
+		switch (menuChoice(4, 0, 14, menuText)) {
 		case 1: //Start new game
 			//Ber användaren välja startlevel
 			cout << ANSI_CODES[SHOW_CURSOR];
@@ -868,6 +909,7 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 				cout << "\033[33m\n\nThere is no saved game" << ANSI_CODES[DEFAULT];
 				Sleep(1000);
 				redo = true;
+				system("cls");
 				break;
 			}
 		}
@@ -875,7 +917,11 @@ bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& l
 			//Sätter att game blivit loadat
 			gameLoaded = true;
 			return true;
-		case 3: //QUIT
+		case 3:
+			howToPlayScreen();
+			redo = true;
+			break;
+		case 4: //QUIT
 			//Returnerar så run blir false
 			return false;
 		default:
