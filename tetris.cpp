@@ -867,12 +867,12 @@ void howToPlayScreen() {
 	cout << "The level, aswell as the score and speed of the game,\n";
 	cout << "increases for every 10 lines cleared.\n\n";
 	cout << "KEYBINDS\n\n";
-	cout << "Move left - Arrowkey left [<]\n";
-	cout << "Move right - Arrowkey right [>]\n";
-	cout << "Rotate clockwise - Arrowkey up [Λ]\n";
-	cout << "Softdrop - Arrowkey down[V]\n";
+	cout << "Move left - Arrowkey left [<-]\n";
+	cout << "Move right - Arrowkey right [->]\n";
+	cout << "Rotate clockwise - Arrowkey up [^]\n";
+	cout << "Softdrop - Arrowkey down[v]\n";
 	cout << "Harddrop - Spacebar[_]\n";
-	cout << "Hold tetromino - [W]/[w]\n";
+	cout << "Hold tetromino - [W/w]\n";
 	cout << "Pause game - [p]\n\n";
 	drawExample();
 	cout << "Press any button to return";
