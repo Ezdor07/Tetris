@@ -30,7 +30,8 @@ const string ANSI_CODES[] = {
 	"\033[30m",			//Svart text
 	"\033[H",			//Musmarkör till 0,0
 	"\033[?25l",		//Göm markören
-	"\033[?25h"			//Visa markören
+	"\033[?25h",		//Visa markören
+	"\033[1m",			//Bold(Ljusare)
 
 };
 
@@ -68,7 +69,8 @@ enum AnsiCodeIndexes {
 	BLACK_TEXT,
 	RESET_CURSOR,
 	HIDE_CURSOR,
-	SHOW_CURSOR
+	SHOW_CURSOR,
+	BOLD
 };
 
 enum Input {
@@ -860,13 +862,13 @@ void drawExample() {
 
 void howToPlayScreen() {
 	system("cls");
-	cout << "INSTRUCTIONS\n\n";
+	cout << ANSI_CODES[BOLD] << "INSTRUCTIONS\n\n" << ANSI_CODES[DEFAULT];
 	cout << "The goal of the game is to move and rotate the falling tetromino\n";
-	cout << "to make full horizontal rows on the board that is then cleared.\n";
-	cout << "The more rows you clear at the same time the more score you are awarded.\n";
-	cout << "The level, aswell as the score and speed of the game,\n";
-	cout << "increases for every 10 lines cleared.\n\n";
-	cout << "KEYBINDS\n\n";
+	cout << "to make full horizontal rows on the board that is then cleared\n";
+	cout << "from the board. The more rows you clear at the same time the more\n";
+	cout << "score you are awarded. The level, aswell as the score and speed of\n";
+	cout << "the game, increases for every 10 lines cleared.\n\n";
+	cout << ANSI_CODES[BOLD] << "KEYBINDS\n\n" << ANSI_CODES[DEFAULT];
 	cout << "Move left - Arrowkey left [<-]\n";
 	cout << "Move right - Arrowkey right [->]\n";
 	cout << "Rotate clockwise - Arrowkey up [^]\n";
