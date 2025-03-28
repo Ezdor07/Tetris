@@ -128,7 +128,7 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 	}
 	//Hämtar varje rad i filen och lägger värdet på raden i leaderboard vectorn
 	string scoreStr = "";
-	while (getline(leaderboardScores, scoreStr)) leaderboard.push_back({ stoi(scoreStr), ""});
+	while (getline(leaderboardScores, scoreStr)) leaderboard.push_back({ stoi(scoreStr), "" });
 	//Stänger filen
 	leaderboardScores.close();
 
