@@ -15,22 +15,22 @@ using namespace std;
 //Structs och konstanter för att göra koden mer läsvänlig
 
 const string ANSI_CODES[] = {
-	"\033[43m",
-	"\033[46m",
-	"\033[48;5;166m", //ORANGE
-	"\033[44m",
-	"\033[42m",
-	"\033[41m",
-	"\033[45m",
-	"\033[m",
-	"\033[100m",
-	"\033[48;5;235m",
-	"\033[47m",
-	"\033[48;5;123m",
-	"\033[30m",
-	"\033[H",
-	"\033[?25l",
-	"\033[?25h"
+	"\033[43m",			//Gul bakgrund
+	"\033[46m",			//Cyan bakgrund
+	"\033[48;5;166m",	//Orange bakgrund
+	"\033[44m",			//Blå bakgrund
+	"\033[42m",			//Grön bakgrund
+	"\033[41m",			//Röd bakgrund
+	"\033[45m",			//Lila bakgrund
+	"\033[m",			//Default
+	"\033[100m",		//Grå bakgrund
+	"\033[48;5;235m",	//Mörkgrå bakgrund
+	"\033[47m",			//Vit bakgrund
+	"\033[48;5;123m",	//Ljusblå bakgrund
+	"\033[30m",			//Svart text
+	"\033[H",			//Musmarkör till 0,0
+	"\033[?25l",		//Göm markören
+	"\033[?25h"			//Visa markören
 
 };
 
@@ -51,6 +51,7 @@ enum BoardInfo {
 	WIDTH = 10,
 };
 
+//Om det bara står en färg så är det bakgrundsfärg
 enum AnsiCodeIndexes {
 	YELLOW,
 	CYAN,
@@ -228,7 +229,7 @@ void drawTetromino(int block, int row) {
 
 //Ritar upp spelplanen
 void drawBoard(const GameStatistics& game, const Block& predictedBlock, int nextBlock) {
-	//Återställer marköre och färg
+	//Återställer markör och färg
 	cout << ANSI_CODES[RESET_CURSOR] << ANSI_CODES[DEFAULT];
 	//Skriver ut leveln
 	for (int i = 0; i < 10; i++) cout << SQUARE;
@@ -474,6 +475,20 @@ void placeTetromino(GameStatistics& game, bool& gameover, bool& hasHeldBlock) {
 	hasHeldBlock = false;
 }
 
+void gravity(GameStatistics& game, chrono::steady_clock::time_point& lastTime, int fallingDelay, bool& hasHeldBlock, bool& gameover) {
+	//Om det gått "fallingDelay" tid sedan senaste gången blocket föll
+	if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
+		//Flytta blocket neråt
+		if (!moveTetromino(game.fallingBlock, 0, 1, game.gameboard))
+			//Om det inte går att flytta ska blocket läggas på brädet
+			placeTetromino(game, gameover, hasHeldBlock);
+		//Gamescore ökar med 1 om det föll naturligt eller 2 om spelaren soft droppade det manuellt
+		game.score += (fallingDelay == 10) ? 2 : 1;
+		//Sätter att nu var senaste gången blocket föll
+		lastTime = chrono::steady_clock::now();
+	}
+}
+
 //Förutser var det fallande blocket kommer hamna och skickar tillbaka det
 Block predictBlock(GameStatistics game) {
 	//Flyttar block neråt tills det inte går mer
@@ -543,7 +558,7 @@ void countDown() {
 	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 }
 
-int menuChoice(int optionsCount, int posX, int posY, vector<string> text) {
+int menuChoice(int optionsCount, int posX, int posY, const vector<string>& text) {
 	int playerChoice = 1;
 	bool redo = true;
 	do {
@@ -616,7 +631,7 @@ void pauseMenu(bool& quit, bool& gameover, GameStatistics game, chrono::steady_c
 
 //Hanterar spelarens inputs
 void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, bool& gameover, chrono::steady_clock::time_point& lastTime, bool& quit) {
-	//Kollar om ett knapp blivit nertryckt
+	//Kollar om en knapp blivit nertryckt
 	if (_kbhit()) {
 		//Kollar vilken knapp det är
 		switch (_getch()) {
@@ -628,7 +643,7 @@ void playerInputs(GameStatistics& game, int& fallingDelay, bool& hasHeldBlock, b
 			break;
 		case ARROW_DOWN: { //Om ner minska fallDelay till 10 ms
 			//Kollar om den träffar marken nästa steg. 
-			// I så fall ökas inte hastigheten så att man kan flytta/rotera blocket efter att det kommit till botten
+			//I så fall ökas inte hastigheten så att man kan flytta/rotera blocket efter att det kommit till botten
 			Block tempBlock = game.fallingBlock;
 			fallingDelay = (moveTetromino(tempBlock, 0, 1, game.gameboard)) ? 10 : fallingDelay;
 			break;
@@ -754,24 +769,18 @@ void tetris(GameStatistics& game, bool gameLoaded, bool& gameover) {
 	while (!gameover && !quit) {
 		//FallingDelay sätts beroende på level från en lista. Alla levlar mer än 19 har samma hastighet
 		fallingDelay = (game.level > 19) ? fallingDelays[19] : fallingDelays[game.level];
+
 		//Kollar inputs från spelaren för att flytta blocket bland annat
 		playerInputs(game, fallingDelay, hasHeldBlock, gameover, lastTime, quit);
 
-		//Om det gått "fallingDelay" tid sedan senaste gången blocket föll
-		if (chrono::steady_clock::now() - lastTime >= chrono::milliseconds(fallingDelay)) {
-			//Flytta blocket neråt
-			if (!moveTetromino(game.fallingBlock, 0, 1, game.gameboard))
-				//Om det inte går att flytta ska blocket läggas på brädet
-				placeTetromino(game, gameover, hasHeldBlock);
-			//Gamescore ökar med 1 om det föll naturligt eller 2 om spelaren soft droppade det manuellt
-			game.score += (fallingDelay == 10) ? 2 : 1;
-			//Sätter att nu var senaste gången blocket föll
-			lastTime = chrono::steady_clock::now();
-		}
+		//Flyttar fallande blocker neråt om det gått tillräckligt lång tid sedan senast
+		gravity(game, lastTime, fallingDelay, hasHeldBlock, gameover);
+
 		//Skapar ett förutspått shadow block som visar var det fallande blocket hamnar om man skickar ner det
 		predictedBlock = predictBlock(game);
 		//Ritar upp brädet
 		drawBoard(game, predictedBlock, game.bag.back());
+
 		//Tar bort lines om det finns några fulla
 		clearLines(game);
 	}
@@ -858,13 +867,13 @@ void howToPlayScreen() {
 	cout << "The level, aswell as the score and speed of the game,\n";
 	cout << "increases for every 10 lines cleared.\n\n";
 	cout << "KEYBINDS\n\n";
-	cout << "Move left - Arrowkey left\n";
-	cout << "Move right - Arrowkey right\n";
-	cout << "Rotate clockwise - Arrowkey up\n";
-	cout << "Softdrop - Arrowkey down\n";
-	cout << "Harddrop - Spacebar\n";
-	cout << "Hold tetromino - W/w\n";
-	cout << "Pause game - p\n\n";
+	cout << "Move left - Arrowkey left [<]\n";
+	cout << "Move right - Arrowkey right [>]\n";
+	cout << "Rotate clockwise - Arrowkey up [Λ]\n";
+	cout << "Softdrop - Arrowkey down[V]\n";
+	cout << "Harddrop - Spacebar[_]\n";
+	cout << "Hold tetromino - [W]/[w]\n";
+	cout << "Pause game - [p]\n\n";
 	drawExample();
 	cout << "Press any button to return";
 	char wait = _getch();

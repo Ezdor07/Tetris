@@ -47,7 +47,7 @@ Utmaningar
 
     -   Programmets grafiska inslag kan förbättras. 
     -   Inputs har en delay när man håller in knappar på grund av 
-        windows egna inställningar
+        Windows egna inställningar
     -   Rotationerna är inte samma som i vanliga tetris
     -   Programmet kan bara hantera en sparfil
     -   Programmet kan bara köras på windows
