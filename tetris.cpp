@@ -15,23 +15,26 @@ using namespace std;
 //Structs och konstanter för att göra koden mer läsvänlig
 
 const string ANSI_CODES[] = {
-	"\033[43m",			//Gul bakgrund
-	"\033[46m",			//Cyan bakgrund
-	"\033[48;5;166m",	//Orange bakgrund
-	"\033[44m",			//Blå bakgrund
-	"\033[42m",			//Grön bakgrund
-	"\033[41m",			//Röd bakgrund
-	"\033[45m",			//Lila bakgrund
-	"\033[m",			//Default
-	"\033[100m",		//Grå bakgrund
-	"\033[48;5;235m",	//Mörkgrå bakgrund
-	"\033[47m",			//Vit bakgrund
-	"\033[48;5;123m",	//Ljusblå bakgrund
-	"\033[30m",			//Svart text
-	"\033[H",			//Musmarkör till 0,0
-	"\033[?25l",		//Göm markören
-	"\033[?25h",		//Visa markören
-	"\033[1m",			//Bold(Ljusare)
+	"\033[43m",				//Gul bakgrund
+	"\033[46m",				//Cyan bakgrund
+	"\033[48;5;166m",		//Orange bakgrund
+	"\033[44m",				//Blå bakgrund
+	"\033[42m",				//Grön bakgrund
+	"\033[41m",				//Röd bakgrund
+	"\033[45m",				//Lila bakgrund
+	"\033[m",				//Default
+	"\033[100m",			//Grå bakgrund
+	"\033[48;5;235m",		//Mörkgrå bakgrund
+	"\033[47m",				//Vit bakgrund
+	"\033[48;5;123m",		//Ljusblå bakgrund
+	"\033[30m",				//Svart text
+	"\033[38;5;220m",		//Guld text
+	"\033[38;5;231m",		//Ljus vit text
+	"\033[38;2;205;127;50m",//Brons text
+	"\033[H",				//Musmarkör till 0,0
+	"\033[?25l",			//Göm markören
+	"\033[?25h",			//Visa markören
+	"\033[1m",				//Bold(Ljusare)
 
 };
 
@@ -67,6 +70,9 @@ enum AnsiCodeIndexes {
 	WHITE,
 	LIGHT_BLUE,
 	BLACK_TEXT,
+	GOLD_TEXT,
+	BRIGHT_WHITE_TEXT,
+	BRONZE_TEXT,
 	RESET_CURSOR,
 	HIDE_CURSOR,
 	SHOW_CURSOR,
@@ -140,7 +146,21 @@ void readLeaderboard(vector <Leaderboard>& leaderboard) {
 
 	//Skriver ut topplistan
 	for (int i = 0; i < leaderboard.size(); i++) {
-		cout << i + 1 << ". " << leaderboard[i].score << " by " << leaderboard[i].name << '\n';
+		switch (i) {
+		case 0:
+			cout << ANSI_CODES[GOLD_TEXT];
+			break;
+		case 1:
+			cout << ANSI_CODES[BOLD];
+			break;
+		case 2:
+			cout << ANSI_CODES[BRONZE_TEXT];
+			break;
+		default:
+			cout << ANSI_CODES[DEFAULT];
+			break;
+		}
+		cout << i + 1 << ". " << leaderboard[i].score << " by " << leaderboard[i].name << '\n' << ANSI_CODES[DEFAULT];
 	}
 }
 
