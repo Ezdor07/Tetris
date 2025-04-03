@@ -903,6 +903,7 @@ void howToPlayScreen() {
 bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& leaderboard) {
 	//Återställer text färger och visar musmarkör
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[HIDE_CURSOR];
+	FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
 	bool redo = false;
 	//Så länge användaren skriver fel input loopas det
 	do {
