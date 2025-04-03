@@ -41,7 +41,11 @@ Hur används programmet?
         Håll nuvarnade tetrimino - w eller W
         Pausa spelet - p
     
-    
+    Extra:
+        Programet körs bättre om man i Windows egna inställningar sätter 
+        på bästa prestanda för energiläget. Det är också bra att sätta 
+        fördröjningen för tangentbordsrepetition till kortast möjliga för 
+        att snabbare kunna flytta tetrominon
 
 Utmaningar 
 
