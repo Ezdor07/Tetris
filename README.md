@@ -56,5 +56,5 @@ Vad härnäst?
 
     I framtiden kan spelet utvecklas genom att förbättra det 
     grafiska gränssnittet, göra det möjligt att spara flera spel och
-    göra så att det kan köras på alla operativsystem och personliga 
+    göra så att det kan köras på alla operativsystem och med olika
     inställningar.
