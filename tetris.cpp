@@ -29,13 +29,11 @@ const string ANSI_CODES[] = {
 	"\033[48;5;123m",		//Ljusblå bakgrund
 	"\033[30m",				//Svart text
 	"\033[38;5;220m",		//Guld text
-	"\033[38;5;231m",		//Ljus vit text
 	"\033[38;2;205;127;50m",//Brons text
 	"\033[H",				//Musmarkör till 0,0
 	"\033[?25l",			//Göm markören
 	"\033[?25h",			//Visa markören
-	"\033[1m",				//Bold(Ljusare)
-
+	"\033[1m"				//Bold(Ljusare)
 };
 
 const int fallingDelays[] = { 800, 720, 630, 550, 470, 380, 300, 220, 130, 100, 100, 83, 83, 67, 67, 67, 50, 50, 50, 33 };
@@ -71,7 +69,6 @@ enum AnsiCodeIndexes {
 	LIGHT_BLUE,
 	BLACK_TEXT,
 	GOLD_TEXT,
-	BRIGHT_WHITE_TEXT,
 	BRONZE_TEXT,
 	RESET_CURSOR,
 	HIDE_CURSOR,
@@ -906,7 +903,6 @@ void howToPlayScreen() {
 bool startMenu(GameStatistics& newGame, bool& gameLoaded, vector<Leaderboard>& leaderboard) {
 	//Återställer text färger och visar musmarkör
 	cout << ANSI_CODES[DEFAULT] << ANSI_CODES[HIDE_CURSOR];
-	
 	bool redo = false;
 	//Så länge användaren skriver fel input loopas det
 	do {
