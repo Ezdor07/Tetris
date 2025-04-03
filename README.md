@@ -4,7 +4,7 @@ Sammanfattning
     toppen av spelplanen som man kan styra både position och 
     rotation på. Målet är överleva så länge som möjligt genom 
     att skapa fulla rader på spelplanen med tetriminosarna. 
-    Då försvinner raden och ovanliggande tetriminos åker ner och
+    Då försvinner raden, ovanliggande tetriminos åker ner och
     man får poäng. 
 
 Bakgrund
