@@ -1,64 +1,64 @@
-Sammanfattning
+# Sammanfattning
 
-    Tetris är ett spel där det faller en tetrimino åt gången från 
-    toppen av spelplanen som man kan styra både position och 
-    rotation på. Målet är överleva så länge som möjligt genom 
-    att skapa fulla rader på spelplanen med tetriminosarna. 
-    Då försvinner raden, ovanliggande tetriminos åker ner och
-    man får poäng. 
+Tetris Ã¤r ett spel dÃ¤r det faller en tetrimino Ã¥t gÃ¥ngen frÃ¥n 
+toppen av spelplanen som man kan styra bÃ¥de position och 
+rotation pÃ¥. MÃ¥let Ã¤r Ã¶verleva sÃ¥ lÃ¤nge som mÃ¶jligt genom 
+att skapa fulla rader pÃ¥ spelplanen med tetriminosarna. 
+DÃ¥ fÃ¶rsvinner raden, ovanliggande tetriminos Ã¥ker ner och
+man fÃ¥r poÃ¤ng. 
 
-Bakgrund
+# Bakgrund
 
-    Tetris är ett av de första tv-spelen som skapades och har 
-    varit populärt sedan dess på grund av dess enkla utseende 
-    och mål. Jag valde att göra programmet för att själv utmana 
-    mina kunskaper. Det kräver att man hittar smidiga lösningar 
-    för att hantera bland annat speluppdatering, inputs och kollision 
-    på ett bra sätt. 
+Tetris Ã¤r ett av de fÃ¶rsta tv-spelen som skapades och har 
+varit populÃ¤rt sedan dess pÃ¥ grund av dess enkla utseende 
+och mÃ¥l. Jag valde att gÃ¶ra programmet fÃ¶r att sjÃ¤lv utmana 
+mina kunskaper. Det krÃ¤ver att man hittar smidiga lÃ¶sningar 
+fÃ¶r att hantera bland annat speluppdatering, inputs och kollision 
+pÃ¥ ett bra sÃ¤tt. 
 
-Nyckelaspekter
+# Nyckelaspekter
 
-	-   Hur rörelser hanteras när en rotation eller förflyttning 
-	    kolliderar med något annat.
-    -   Det visuella
-    -   Hur spelet sparas och laddas
+-  Hur rÃ¶relser hanteras nÃ¤r en rotation eller fÃ¶rflyttning kolliderar med nÃ¥got annat.
+-  Det visuella
+-  Hur spelet sparas och laddas
 	
 
-Hur används programmet?
+# Hur anvÃ¤nds programmet?
 
-    För att använda spelet startar man programmet. Viktigt att hela 
-    spelrutan syns i terminalen när man startar. Gör terminalen så 
-    stor som möjligt. Man navigerar menyn med Piltangenterna och Enter. När du 
-    gjort dina val börjar det falla ett block från toppen av spelplanen 
-    som man kan styra. 
+FÃ¶r att anvÃ¤nda spelet startar man programmet. Viktigt att hela 
+spelrutan syns i terminalen nÃ¤r man startar. GÃ¶r terminalen sÃ¥ 
+stor som mÃ¶jligt. Man navigerar menyn med Piltangenterna och Enter. NÃ¤r du 
+gjort dina val bÃ¶rjar det falla ett block frÃ¥n toppen av spelplanen 
+som man kan styra. 
 
-    Kontroller:
-        Flytta tetrimino höger - Piltangent höger(>)
-        Flytta tetrimino vänster - Piltangent vänster(<)
-        Rotera tetriminon - Piltangent upp(^)
-        Skynda på fallet - Piltangent ner(v)
-        Skicka ner tetromino till botten - Mellanslag
-        Håll nuvarnade tetrimino - w eller W
-        Pausa spelet - p
+![SkÃ¤rmbild 2025-04-04 103620](https://github.com/user-attachments/assets/3ba9f575-192b-47d2-b44e-561f0f760f1c)
+
+Kontroller:
+- Flytta tetrimino hÃ¶ger - Piltangent hÃ¶ger(>)
+- Flytta tetrimino vÃ¤nster - Piltangent vÃ¤nster(<)
+- Rotera tetriminon - Piltangent upp(^)
+- Skynda pÃ¥ fallet - Piltangent ner(v)
+- Skicka ner tetromino till botten - Mellanslag
+- HÃ¥ll nuvarnade tetrimino - w eller W
+- Pausa spelet - p
     
-    Extra:
-        Programet körs bättre om man i Windows egna inställningar sätter 
-        på bästa prestanda för energiläget. Det är också bra att sätta 
-        fördröjningen för tangentbordsrepetition till kortast möjliga för 
-        att snabbare kunna flytta tetrominon
+Extra:
+<br> Programet kÃ¶rs bÃ¤ttre om man i Windows egna instÃ¤llningar sÃ¤tter 
+pÃ¥ bÃ¤sta prestanda fÃ¶r energilÃ¤get. Det Ã¤r ocksÃ¥ bra att sÃ¤tta 
+fÃ¶rdrÃ¶jningen fÃ¶r tangentbordsrepetition till kortast mÃ¶jliga fÃ¶r 
+att snabbare kunna flytta tetrominon
 
-Utmaningar 
+# Utmaningar 
 
-    -   Programmets grafiska inslag kan förbättras. 
-    -   Inputs har en delay när man håller in knappar på grund av 
-        Windows egna inställningar
-    -   Rotationerna är inte samma som i vanliga tetris
-    -   Programmet kan bara hantera en sparfil
-    -   Programmet kan bara köras på windows
+-   Programmets grafiska inslag kan fÃ¶rbÃ¤ttras.
+-   Inputs har en delay nÃ¤r man hÃ¥ller in knappar pÃ¥ grund av Windows egna instÃ¤llningar
+-   Rotationerna Ã¤r inte samma som i vanliga tetris
+-   Programmet kan bara hantera en sparfil
+-   Programmet kan bara kÃ¶ras pÃ¥ windows
 
-Vad härnäst?
+# Vad hÃ¤rnÃ¤st?
 
-    I framtiden kan spelet utvecklas genom att förbättra det 
-    grafiska gränssnittet, göra det möjligt att spara flera spel och
-    göra så att det kan köras på alla operativsystem och med olika
-    inställningar.
+ I framtiden kan spelet utvecklas genom att fÃ¶rbÃ¤ttra det 
+    grafiska grÃ¤nssnittet, gÃ¶ra det mÃ¶jligt att spara flera spel och
+    gÃ¶ra sÃ¥ att det kan kÃ¶ras pÃ¥ alla operativsystem och med olika
+    instÃ¤llningar.
